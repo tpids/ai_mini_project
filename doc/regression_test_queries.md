@@ -8,7 +8,19 @@
 | 4 | gateway-service에서 payments-service로 가는 요청이 타임아웃 나고 있어요 | 두 시스템 동시 언급 — system_name은 먼저 등장한 gateway-service 하나만 뽑히는지, 그런데도 research task는 두 시스템 다 조사하는지(비교 분석 영향 없음) 확인 |
 | 5 | web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘 | 기본 2개 시스템 동시 언급 — 기존 동작(web-01, auth-service 둘 다 조사) 회귀 확인 |
 | 6 | payments-service랑 cache-service 둘 다 저하됐는데 공통 원인이 있는지 분석해줘 | needs_analysis=true 유도 — gate(W6)·analysis_node 비교 분석이 여전히 동작하는지 확인 |
-| 7 | 로그인 응답이 느려요, 원인 확인해주세요 | 시스템명 미언급 — auth-service 폴백 확인 |
-| 8 | billing-service 응답이 느려요 | 목록에 없는 시스템명 — system_name 라벨은 auth-service 폴백, plan()의 target 클램프도 정상 동작하는지(KNOWN_SYSTEMS에 없는 임의 이름은 여전히 걸러져야 함) |
+| 7 | 로그인 응답이 느려요, 원인 확인해주세요 | 시스템명 미언급 — 임의 서비스 조회 없이 대상 서비스명을 되묻는지 확인 |
+| 8 | billing-service 응답이 느려요 | 미등록 서비스 안내 및 등록 목록 표시, auth-service를 대신 조회하지 않는지 확인 |
 | 9 | 안녕, 너는 누구야? | route=chat 직행(Wave 5) — 토큰 스트리밍(AnswerToken)이 채팅 경로에서도 실시간으로 오는지 확인 |
 | 10 | 제 이름은 민수입니다 → (다음 메시지로) 제 이름이 뭐였죠? | Wave 12 세션 기억 — 서버 재시작 후에도 유지되는지, 스트리밍과 충돌 없는지 확인 |
+
+## 대상 확인 개선 검증 (v2)
+
+- 새 대화에서 `응답이 느려요. 원인 확인해주세요.` → 서비스명 확인 질문, 모니터링 조회 0건.
+- 이어서 `payments-service` → 이전 증상을 유지하여 payments-service만 조회.
+- 새 대화에서 `payments-service와 billing-service 지연` → 미등록 대상 안내 후 전체 진단 보류.
+- 새 대화에서 `my-auth-service 지연` → auth-service로 부분 매칭하지 않음.
+- 새 대화에서 `PAYMENTS-SERVICE 지연` → 등록명 payments-service로 조회.
+- 두 서비스가 모두 등록되어 있으면 두 대상만 조회. 모델이 추가한 무관한 대상은 제외.
+- 일반 대화는 기존 chat 경로 유지.
+
+자동 검증: `.venv/bin/python3 -m unittest discover -s tests -v`

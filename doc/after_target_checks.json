@@ -1,0 +1,213 @@
+[
+  {
+    "case": "unknown",
+    "message": "billing-service 응답이 느려요",
+    "thread_id": "unknown-after-target-886e060f8170427a91c2c2fcd689f02f",
+    "elapsed_seconds": 1.48,
+    "response": {
+      "reply": "진단할 서비스 확인이 필요합니다.\n등록된 모니터링 대상에서 billing-service를 찾을 수 없습니다. 서비스명을 확인해주세요.\n조회 가능한 대상: auth-service, cache-service, gateway-service, log-service, payments-service, web-01",
+      "events": [
+        {
+          "type": "RouteDecided",
+          "route": "incident"
+        },
+        {
+          "type": "TargetChecked",
+          "status": "unknown",
+          "targets": []
+        }
+      ],
+      "metadata": {
+        "route": "incident",
+        "task_count": 0,
+        "gate_removed": 0,
+        "replan_rounds": 0,
+        "retry_count": 0,
+        "parallel_elapsed": null,
+        "validation_attempts": 0,
+        "cost_usd": 5e-05,
+        "llm_backend": "ollama",
+        "supervisor_version": "v2",
+        "instance_id": 4487963280,
+        "langsmith_run_id": null
+      }
+    }
+  },
+  {
+    "case": "missing",
+    "message": "응답이 느려요. 원인 확인해주세요.",
+    "thread_id": "after-target-886e060f8170427a91c2c2fcd689f02f",
+    "elapsed_seconds": 0.91,
+    "response": {
+      "reply": "진단할 서비스 확인이 필요합니다.\n어느 서비스의 응답이 느리거나 장애가 발생했나요? 서비스명을 알려주세요.\n조회 가능한 대상: auth-service, cache-service, gateway-service, log-service, payments-service, web-01",
+      "events": [
+        {
+          "type": "RouteDecided",
+          "route": "incident"
+        },
+        {
+          "type": "TargetChecked",
+          "status": "missing",
+          "targets": []
+        }
+      ],
+      "metadata": {
+        "route": "incident",
+        "task_count": 0,
+        "gate_removed": 0,
+        "replan_rounds": 0,
+        "retry_count": 0,
+        "parallel_elapsed": null,
+        "validation_attempts": 0,
+        "cost_usd": 4.1e-05,
+        "llm_backend": "ollama",
+        "supervisor_version": "v2",
+        "instance_id": 4487963280,
+        "langsmith_run_id": null
+      }
+    }
+  },
+  {
+    "case": "followup",
+    "message": "payments-service",
+    "elapsed_seconds": 72.36,
+    "response": {
+      "reply": "1) CPU 사용률 88.7% 및 최근 배포/트래픽 변화 시점 확인 (runbook 1단계)  \n2) 반복 호출, 배치 작업 중복 실행 등 특정 요청 패턴 확인 (runbook 2단계)  \n3) CPU 90% 초과 지속 시 인스턴스 1대 추가 (runbook 3단계)",
+      "events": [
+        {
+          "type": "RouteDecided",
+          "route": "incident"
+        },
+        {
+          "type": "TargetChecked",
+          "status": "valid",
+          "targets": [
+            "payments-service"
+          ]
+        },
+        {
+          "type": "PlanCreated",
+          "task_count": 2,
+          "targets": [
+            "payments-service"
+          ]
+        },
+        {
+          "type": "GateApplied",
+          "removed_analysis_tasks": 0
+        },
+        {
+          "type": "TaskCompleted",
+          "id": "target-monitoring-0",
+          "source": "monitoring",
+          "target": "payments-service",
+          "retries": 1
+        },
+        {
+          "type": "ReplanCheck",
+          "round": 0,
+          "is_sufficient": false,
+          "gap_task": "task-gap-runbook",
+          "target": "cpu-spike"
+        },
+        {
+          "type": "TaskCompleted",
+          "id": "task-gap-runbook",
+          "source": "runbook",
+          "target": "cpu-spike",
+          "retries": 0
+        },
+        {
+          "type": "ReplanCheck",
+          "round": 1,
+          "is_sufficient": true
+        },
+        {
+          "type": "AnalysisCompleted",
+          "length": 9
+        },
+        {
+          "type": "DraftWritten",
+          "attempt": 1,
+          "length": 149
+        },
+        {
+          "type": "Validation",
+          "attempt": 1,
+          "verdict": "합격"
+        },
+        {
+          "type": "Finalize",
+          "pipeline": "incident-v2"
+        }
+      ],
+      "metadata": {
+        "route": "incident",
+        "task_count": 3,
+        "gate_removed": 0,
+        "replan_rounds": 1,
+        "retry_count": 1,
+        "parallel_elapsed": 0.36,
+        "validation_attempts": 1,
+        "cost_usd": 0.009498,
+        "llm_backend": "ollama",
+        "supervisor_version": "v2",
+        "instance_id": 4526565648,
+        "langsmith_run_id": null
+      }
+    }
+  },
+  {
+    "case": "greeting",
+    "message": "안녕, 너는 누구야?",
+    "elapsed_seconds": 2.16,
+    "response": {
+      "reply": "안녕하세요! 저는 빠르게 비서입니다.",
+      "events": [
+        {
+          "type": "RouteDecided",
+          "route": "chat"
+        },
+        {
+          "type": "Finalize",
+          "pipeline": "chat-direct"
+        }
+      ],
+      "metadata": {
+        "route": "chat",
+        "task_count": 0,
+        "gate_removed": 0,
+        "replan_rounds": 0,
+        "retry_count": 0,
+        "parallel_elapsed": null,
+        "validation_attempts": 0,
+        "cost_usd": 6.5e-05,
+        "llm_backend": "ollama",
+        "supervisor_version": "v2",
+        "instance_id": 4526565648,
+        "langsmith_run_id": null
+      }
+    }
+  },
+  {
+    "case": "stream_unknown",
+    "events": [
+      {
+        "type": "RouteDecided",
+        "route": "incident",
+        "node": "route"
+      },
+      {
+        "type": "TargetChecked",
+        "status": "unknown",
+        "targets": [],
+        "node": "check_target"
+      },
+      {
+        "type": "FinalAnswer",
+        "reply": "진단할 서비스 확인이 필요합니다.\n등록된 모니터링 대상에서 billing-service를 찾을 수 없습니다. 서비스명을 확인해주세요.\n조회 가능한 대상: auth-service, cache-service, gateway-service, log-service, payments-service, web-01",
+        "prompt": null
+      }
+    ]
+  }
+]

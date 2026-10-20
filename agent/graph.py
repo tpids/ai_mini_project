@@ -1,7 +1,8 @@
 """v2 Supervisor — 실제 langgraph.StateGraph (Wave 4·5·6·7·8·10b·15 통합).
 
 route → (chat 직행 | incident 파이프라인)
-incident: plan(MCP Prompt 절차 반영) → gate(권위 게이트) → research(가드+병렬+재시도)
+incident: check_target(대상 확인, 불명확하면 질문 후 종료)
+          → plan(MCP Prompt 절차 반영) → gate(권위 게이트) → research(가드+병렬+재시도)
           → replan_check(부족 시 gap task 후 재조사) → analysis(needs_analysis=True일 때만
           실제 실행) → write → validate(반려 시 재작성) → finalize
 
@@ -9,11 +10,10 @@ incident: plan(MCP Prompt 절차 반영) → gate(권위 게이트) → research
 각 노드는 @traceable로 LangSmith에 계층 트리로 기록된다.
 """
 import asyncio
-import json
+import re
 import time
 from functools import partial
-from pathlib import Path
-from typing import Any, TypedDict
+from typing import TypedDict
 
 from langgraph.config import get_stream_writer
 from langgraph.graph import END, StateGraph
@@ -21,30 +21,7 @@ from langsmith import traceable
 
 from .deps import SupervisorDeps
 from .retry import with_retry
-
-
-def _load_known_systems() -> set[str]:
-    """ollama_llm.py/openai_llm.py와 동일한 소스(data/monitoring.json)에서
-    시스템 목록을 읽는다 — plan_node가 MCP Prompt에 넘길 system_name을
-    쿼리에서 멤버십 매칭으로 뽑아낼 때 쓴다."""
-    path = Path(__file__).resolve().parent.parent / "data" / "monitoring.json"
-    try:
-        return set(json.loads(path.read_text()).keys())
-    except (OSError, json.JSONDecodeError):
-        return {"auth-service", "web-01"}
-
-
-KNOWN_SYSTEMS = _load_known_systems()
-
-
-def _extract_system_name(query: str) -> str:
-    """정규식 대신 실제 KNOWN_SYSTEMS 멤버십 매칭 — MCP Prompt(incident_analysis_
-    prompt)의 system_name은 "시스템: X" 한 줄짜리 컨텍스트라 항상 정해진 이름
-    중 하나로만 고정한다(여러 개 언급돼도 join하지 않음 — 실제 조사 대상 목록은
-    이후 plan()의 tasks가 별도로 결정). 쿼리에서 가장 먼저 등장하는 시스템을
-    고르고, 하나도 안 걸리면 가장 흔한 사례인 auth-service로 폴백."""
-    matches = [(query.index(s), s) for s in KNOWN_SYSTEMS if s in query]
-    return min(matches)[1] if matches else "auth-service"
+from .targets import CLARIFICATION_PREFIX, SYSTEM_NAME, extract_targets, load_known_systems, pending_query
 
 
 class AgentState(TypedDict, total=False):
@@ -52,6 +29,8 @@ class AgentState(TypedDict, total=False):
     thread_id: str
     history: list[dict]
     route: str
+    targets: list[str]
+    target_status: str
     needs_analysis: bool
     tasks: list[dict]
     gate_removed: int
@@ -75,11 +54,61 @@ def _cost(state: AgentState, usage: dict) -> float:
 @traceable(name="route_node")
 async def route_node(state: AgentState, deps: SupervisorDeps) -> dict:
     """Wave 5 — 모든 쿼리가 무거운 파이프라인을 탈 필요는 없다."""
-    result, usage = deps.fast_llm.route(state["query"])
+    # 되물음에 서비스명만 답해도 이전 장애 요청의 진단을 이어간다.
+    is_target_reply = False
+    if pending_query(state.get("history", [])):
+        try:
+            found, unknown = extract_targets(state["query"], load_known_systems())
+        except (OSError, ValueError):
+            found, unknown = [], []
+        is_target_reply = bool(found or unknown)
+    if is_target_reply:
+        result, usage = {"route": "incident", "needs_analysis": False}, {"usd": 0.0}
+    else:
+        result, usage = deps.fast_llm.route(state["query"])
     event = {"type": "RouteDecided", "route": result["route"]}
     return {"route": result["route"], "needs_analysis": result["needs_analysis"],
             "cost_usd": _cost(state, usage),
             "events": state.get("events", []) + [event]}
+
+
+@traceable(name="check_target_node")
+async def check_target_node(state: AgentState, deps: SupervisorDeps) -> dict:
+    """MCP 조회 전에 명시된 대상을 검사하고, 불명확하면 진단을 멈춘다."""
+    try:
+        known = load_known_systems()
+        targets, unknown = extract_targets(state["query"], known)
+    except (OSError, ValueError):
+        status = "unavailable"
+        targets = []
+        reply = "모니터링 대상 목록을 읽을 수 없어 진단을 진행할 수 없습니다. 설정을 확인해주세요."
+    else:
+        choices = ", ".join(sorted(known))
+        if unknown:
+            status = "unknown"
+            reply = (f"{CLARIFICATION_PREFIX}\n등록된 모니터링 대상에서 {', '.join(unknown)}를 찾을 수 없습니다. "
+                     f"서비스명을 확인해주세요.\n조회 가능한 대상: {choices}")
+        elif not targets:
+            status = "missing"
+            reply = (f"{CLARIFICATION_PREFIX}\n어느 서비스의 응답이 느리거나 장애가 발생했나요? "
+                     f"서비스명을 알려주세요.\n조회 가능한 대상: {choices}")
+        else:
+            status, reply = "valid", None
+    event = {"type": "TargetChecked", "status": status, "targets": targets}
+    update = {"targets": targets, "target_status": status,
+              "events": state["events"] + [event]}
+    if reply:
+        update.update(final=reply, tasks=[])
+    else:
+        previous = pending_query(state.get("history", []))
+        # 서비스명만 답한 경우 이전 증상을 유지한다. 이전의 잘못된 대상명은 제거한다.
+        remainder = state["query"]
+        for target in targets:
+            remainder = re.sub(re.escape(target), "", remainder, flags=re.I)
+        if previous and len(remainder.strip(" .,!?:은는이가요")) <= 3:
+            symptom = SYSTEM_NAME.sub("", previous)
+            update["query"] = f"{state['query']}\n이전 요청의 증상: {symptom}"
+    return update
 
 
 @traceable(name="chat_answer_node")
@@ -107,10 +136,18 @@ async def plan_node(state: AgentState, deps: SupervisorDeps) -> dict:
     prompt_server = await deps.mcp.find_prompt("incident_analysis_prompt")
     procedure = await deps.mcp.get_prompt(
         "incident_analysis_prompt",
-        {"system_name": _extract_system_name(state["query"]), "symptom": state["query"]},
+        {"system_name": state["targets"][0], "symptom": state["query"]},
         server=prompt_server,
     )
     result, usage = deps.fast_llm.plan(state["query"], procedure)
+    # 모델이 다른 서비스를 추가하거나 명시된 대상을 누락해도 실제 조회는 검증된 대상만 한다.
+    other_tasks = [t for t in result["tasks"]
+                   if not (t["agent"] == "research" and t.get("kind") == "monitoring")]
+    result["tasks"] = [
+        {"id": f"target-monitoring-{i}", "agent": "research", "kind": "monitoring",
+         "target": target, "status": "pending"}
+        for i, target in enumerate(state["targets"])
+    ] + other_tasks
     targets = [t["target"] for t in result["tasks"]
                if t["agent"] == "research" and t.get("target")]
     event = {"type": "PlanCreated", "task_count": len(result["tasks"]),
@@ -295,7 +332,11 @@ async def finalize_node(state: AgentState, deps: SupervisorDeps) -> dict:
 
 
 def _after_route(state: AgentState) -> str:
-    return "chat_answer" if state["route"] == "chat" else "plan"
+    return "chat_answer" if state["route"] == "chat" else "check_target"
+
+
+def _after_target_check(state: AgentState) -> str:
+    return "plan" if state["target_status"] == "valid" else "end"
 
 
 def _after_replan_check(state: AgentState) -> str:
@@ -312,6 +353,7 @@ def build_graph(deps: SupervisorDeps):
     node = lambda fn: partial(fn, deps=deps)   # Wave 13 — 명시적 의존성 주입
     g.add_node("route", node(route_node))
     g.add_node("chat_answer", node(chat_answer_node))
+    g.add_node("check_target", node(check_target_node))
     g.add_node("plan", node(plan_node))
     g.add_node("gate", node(gate_node))
     g.add_node("research", node(research_node))
@@ -323,7 +365,9 @@ def build_graph(deps: SupervisorDeps):
 
     g.set_entry_point("route")
     g.add_conditional_edges("route", _after_route,
-                            {"chat_answer": "chat_answer", "plan": "plan"})
+                            {"chat_answer": "chat_answer", "check_target": "check_target"})
+    g.add_conditional_edges("check_target", _after_target_check,
+                            {"plan": "plan", "end": END})
     g.add_edge("chat_answer", END)
     g.add_edge("plan", "gate")
     g.add_edge("gate", "research")

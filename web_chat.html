@@ -115,6 +115,7 @@
 const { createApp, ref, reactive, nextTick } = Vue;
 
 const STEP_LABELS = {
+  TargetChecked: e => e.status === 'valid' ? `진단 대상 확인: ${e.targets.join(', ')}` : '진단 대상 확인 필요',
   PlanCreated: e => `계획 수립: 할 일 ${e.task_count}가지${e.targets?.length ? ` (시스템: ${e.targets.join(', ')})` : ''}`,
   GateApplied: e => e.removed_analysis_tasks ? `불필요한 작업 ${e.removed_analysis_tasks}건 제거` : null,
   TaskCompleted: e => (e.source === 'monitoring'

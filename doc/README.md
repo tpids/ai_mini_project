@@ -11,6 +11,23 @@ Wave 1~15가 각각 증명한 패턴(싱글턴·MCP·SSE·라우팅·게이트·
 
 ## 주요 실행 방법
 
+### 대상 확인 개선 (v2)
+
+장애 요청은 계획 수립 전에 `data/monitoring.json`의 등록 목록과 서비스명을 비교한다.
+미등록 대상은 이름과 등록 목록을 안내하고, 서비스명이 없으면 대상 서비스를 되묻는다.
+이 경우 MCP 진단 조회를 실행하지 않는다. 바로 다음 메시지에 서비스명만 답하면
+같은 대화에서 이전 증상을 이어서 진단한다. 계획 모델이 다른 대상을 추가해도
+실제 모니터링 조회는 사용자에게 확인한 대상에 한정한다.
+
+적용 범위는 v2다. v1은 개선 전 비교용으로 유지한다. 별칭(예: 결제 서버)의 자동 매핑,
+대명사로 이전 대상을 추론하기, 중간 잡담을 건너뛴 확인 대화는 지원하지 않는다.
+미등록 이름 탐지는 예제의 `*-service`, `*-숫자` 명명 규칙을 사용한다.
+그 외 이름을 식별하지 못하면 서비스명을 다시 묻는다.
+장애/일반 대화의 최초 라우팅은 기존 LLM 판단을 사용한다.
+
+검증: `.venv/bin/python3 -m unittest discover -s tests -v`
+개선 전 기록: `baseline_target_checks.json`, 개선 후 기록: `after_target_checks.json`.
+
 **맨 처음 한 번만**: 이 폴더를 처음 받았다면(학생 배포 등) `.venv`부터 만든다.
 
 ```bash
@@ -53,7 +70,9 @@ flowchart TB
 
     subgraph Graph["agent/graph.py — LangGraph StateGraph (v2)"]
         Route["route"] -->|chat| ChatAnswer["chat_answer"]
-        Route -->|incident| Plan["plan"]
+        Route -->|incident| TargetCheck["check_target"]
+        TargetCheck -->|대상 확인| Plan["plan"]
+        TargetCheck -->|미등록·미지정| Clarify["서비스명 확인 질문 후 종료"]
         Plan --> Gate["gate"]
         Gate --> Research["research"]
         Research --> ReplanCheck["replan_check"]
