@@ -114,6 +114,7 @@ def _metadata(result: dict, run_id: str | None) -> dict:
         "retry_count": result.get("retry_count", 0),
         "parallel_elapsed": result.get("parallel_elapsed"),
         "validation_attempts": result.get("validation_attempts", 0),
+        "report_mode": result.get("report_mode"),
         "cost_usd": result.get("cost_usd", 0.0),
         "llm_backend": app.state.llm_backend,
         "supervisor_version": app.state.deps.version,
@@ -165,9 +166,8 @@ async def chat_stream(message: str, thread_id: str = "default"):
             seen = 0
             final = ""
             last_prompt = None   # finalize까지 살아남은 최종 write/chat 호출의 실제 프롬프트
-            # stream_mode를 리스트로 주면 (mode, payload) 튜플이 나온다 — "updates"는
-            # 노드가 끝날 때마다의 상태 델타, "custom"은 write_node/chat_answer_node가
-            # get_stream_writer()로 실행 중에 즉시 흘려보내는 토큰(AnswerToken) 이벤트다.
+            # "updates"는 노드 상태, "custom"은 일반 대화의 AnswerToken이다.
+            # 진단 초안은 검증 후 FinalAnswer로만 공개한다.
             async for mode, payload in app.state.graph.astream(
                     {"query": message, "thread_id": thread_id, "history": history,
                      "events": [], "cost_usd": 0.0}, stream_mode=["updates", "custom"]):

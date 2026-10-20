@@ -8,6 +8,8 @@ import re
 
 from langsmith import traceable
 
+from .reporting import default_step_ids, render_report
+
 
 class FakeLLM:
     def __init__(self, name: str, usd_per_1k_tokens: float):
@@ -93,33 +95,9 @@ class QualityLLM(FakeLLM):
     @traceable(run_type="llm", name="quality_llm.write")
     async def write(self, query: str, collected: list[dict], attempt: int,
               feedback: str | None, on_token=None) -> tuple[str, dict]:
-        """Wave 8 재현: 1차 초안은 의도적으로 저품질(너무 짧음) → validator가 반려하면
-        피드백을 반영한 구조화된 2차 초안을 내놓는다.
-
-        fake 백엔드는 실제 네트워크 호출이 없어 토큰 단위로 쪼갤 대상이 없다 —
-        ollama_llm.py와 인터페이스(on_token 콜백)만 맞추고 결과를 한 번에 반환한다."""
-        if attempt == 1:
-            draft = "재시작하면 됩니다."
-            if on_token is not None:
-                on_token(draft)
-            return draft, self._usage(query, draft)
-
-        mon = [c for c in collected if c["source"] == "monitoring"]
-        run = [c for c in collected if c["source"] == "runbook"]
-        summary = " · ".join(
-            f"{c['data']['system_name']} 상태={c['data']['status']}, "
-            f"CPU {c['data']['cpu_percent']}% (알림 {len(c['data']['alerts'])}건)"
-            for c in mon)
-        lines = [f"'{query}' 진단 결과:", f"1) 모니터링: {summary}"]
-        if run:
-            body_lines = [l.strip() for l in run[0]["data"].strip().splitlines() if l.strip()]
-            title = body_lines[0].lstrip("# ")
-            steps = [m.group(1) for l in body_lines[1:]
-                     if (m := re.match(r"^\d+\.\s+(.*)", l))]
-            advice = " ".join(steps[1:3]) or "표준 절차를 따라 조치하세요."
-            lines.append(f"2) 표준 절차: '{title}'에 따라 {advice}")
-        lines.append("3) 정상화 확인 후 원인 분석과 재발 방지 대책을 문서화하세요.")
-        draft = " ".join(lines)
-        if on_token is not None:
-            on_token(draft)
-        return draft, self._usage(query + str(feedback), draft)
+        """실모델과 같은 출처 보존 보고서를 결정론적으로 생성한다."""
+        selected = default_step_ids(collected)
+        report = render_report(collected, selected)
+        usage = self._usage(query + str(feedback), report)
+        usage.update(report_step_ids=selected, report_mode="source_selected")
+        return report, usage

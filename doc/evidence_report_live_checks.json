@@ -1,0 +1,156 @@
+[
+  {
+    "message": "billing-service 응답이 느려요",
+    "response": {
+      "reply": "진단할 서비스 확인이 필요합니다.\n등록된 모니터링 대상에서 billing-service를 찾을 수 없습니다. 서비스명을 확인해주세요.\n조회 가능한 대상: auth-service, cache-service, gateway-service, log-service, payments-service, web-01",
+      "events": [
+        {
+          "type": "RouteDecided",
+          "route": "incident"
+        },
+        {
+          "type": "TargetChecked",
+          "status": "unknown",
+          "targets": []
+        }
+      ],
+      "metadata": {
+        "route": "incident",
+        "task_count": 0,
+        "gate_removed": 0,
+        "replan_rounds": 0,
+        "retry_count": 0,
+        "parallel_elapsed": null,
+        "validation_attempts": 0,
+        "report_mode": null,
+        "cost_usd": 5e-05,
+        "llm_backend": "ollama",
+        "supervisor_version": "v2",
+        "instance_id": 4454441744,
+        "langsmith_run_id": null
+      }
+    }
+  },
+  {
+    "message": "응답이 느려요. 원인 확인해주세요.",
+    "response": {
+      "reply": "진단할 서비스 확인이 필요합니다.\n어느 서비스의 응답이 느리거나 장애가 발생했나요? 서비스명을 알려주세요.\n조회 가능한 대상: auth-service, cache-service, gateway-service, log-service, payments-service, web-01",
+      "events": [
+        {
+          "type": "RouteDecided",
+          "route": "incident"
+        },
+        {
+          "type": "TargetChecked",
+          "status": "missing",
+          "targets": []
+        }
+      ],
+      "metadata": {
+        "route": "incident",
+        "task_count": 0,
+        "gate_removed": 0,
+        "replan_rounds": 0,
+        "retry_count": 0,
+        "parallel_elapsed": null,
+        "validation_attempts": 0,
+        "report_mode": null,
+        "cost_usd": 4.1e-05,
+        "llm_backend": "ollama",
+        "supervisor_version": "v2",
+        "instance_id": 4454441744,
+        "langsmith_run_id": null
+      }
+    }
+  },
+  {
+    "case": "streamed_payments",
+    "elapsed_seconds": 25.02,
+    "events": [
+      {
+        "type": "RouteDecided",
+        "route": "incident",
+        "node": "route"
+      },
+      {
+        "type": "TargetChecked",
+        "status": "valid",
+        "targets": [
+          "payments-service"
+        ],
+        "node": "check_target"
+      },
+      {
+        "type": "PlanCreated",
+        "task_count": 2,
+        "targets": [
+          "payments-service"
+        ],
+        "node": "plan"
+      },
+      {
+        "type": "GateApplied",
+        "removed_analysis_tasks": 0,
+        "node": "gate"
+      },
+      {
+        "type": "TaskCompleted",
+        "id": "target-monitoring-0",
+        "source": "monitoring",
+        "target": "payments-service",
+        "retries": 1,
+        "node": "research"
+      },
+      {
+        "type": "ReplanCheck",
+        "round": 0,
+        "is_sufficient": false,
+        "gap_task": "task-gap-runbook",
+        "target": "cpu-spike",
+        "node": "replan_check"
+      },
+      {
+        "type": "TaskCompleted",
+        "id": "task-gap-runbook",
+        "source": "runbook",
+        "target": "cpu-spike",
+        "retries": 0,
+        "node": "research"
+      },
+      {
+        "type": "ReplanCheck",
+        "round": 1,
+        "is_sufficient": true,
+        "node": "replan_check"
+      },
+      {
+        "type": "AnalysisCompleted",
+        "length": 9,
+        "node": "analysis"
+      },
+      {
+        "type": "DraftWritten",
+        "attempt": 1,
+        "length": 592,
+        "node": "write"
+      },
+      {
+        "type": "Validation",
+        "attempt": 1,
+        "verdict": "합격",
+        "fallback": false,
+        "node": "validate"
+      },
+      {
+        "type": "Finalize",
+        "pipeline": "incident-v2",
+        "node": "finalize"
+      },
+      {
+        "type": "FinalAnswer",
+        "reply": "1) 확인된 사실\n- payments-service: 상태=degraded, CPU 88.1%, 메모리 53.5%\n  조회 시각: 2026-10-20T13:51:15.405590\n  알림 원문: [\"CPU 91% (threshold 80%)\", \"payments-service-3 instance responding slow\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- [Runbook: CPU 급증 대응 절차 / 1번] get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n- [Runbook: CPU 급증 대응 절차 / 3번] CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.",
+        "prompt": "[SYSTEM]\n당신은 ICT 운영 대응 매뉴얼의 관련 항목을 고르는 담당자다. 사용자 요청과 관측값에 관련된 항목 ID를 1~3개 고르라. 확인 단계와 조건부 조치를 함께 고려하라. 매뉴얼은 참고 절차이며, 조건 충족·작업 실행·원인 확인의 증거가 아니다. 답변 문장이나 새 수치·인스턴스명을 만들지 마라. JSON 객체만 응답하라. 형식: {\"step_ids\": [\"R1-S1\", \"R1-S3\"]}. 아래 목록에 실제 존재하는 ID만 사용하라.\n\n[USER]\n## 사용자 요청\npayments-service 결제 응답이 느려지고 CPU가 치솟았어요, 원인 확인해주세요\n\n## 관측값\n- payments-service: 상태=degraded, CPU 88.1%, 메모리 53.5%\n  조회 시각: 2026-10-20T13:51:15.405590\n  알림 원문: [\"CPU 91% (threshold 80%)\", \"payments-service-3 instance responding slow\"]\n\n## 선택 가능한 매뉴얼 항목\n{\"R1-S1\": {\"title\": \"Runbook: CPU 급증 대응 절차\", \"number\": \"1\", \"text\": \"get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\"}, \"R1-S2\": {\"title\": \"Runbook: CPU 급증 대응 절차\", \"number\": \"2\", \"text\": \"반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\"}, \"R1-S3\": {\"title\": \"Runbook: CPU 급증 대응 절차\", \"number\": \"3\", \"text\": \"CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.\"}, \"R1-S4\": {\"title\": \"Runbook: CPU 급증 대응 절차\", \"number\": \"4\", \"text\": \"급증이 특정 배포 직후 시작됐다면 직전 배포를 롤백하고 원인 분석은 별도로 진행한다.\"}, \"R1-S5\": {\"title\": \"Runbook: CPU 급증 대응 절차\", \"number\": \"5\", \"text\": \"정상화 후 프로파일링 결과를 바탕으로 핫스팟 코드를 식별해 최적화 작업을 등록한다.\"}}"
+      }
+    ]
+  }
+]
