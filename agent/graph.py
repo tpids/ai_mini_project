@@ -20,6 +20,7 @@ from langgraph.graph import END, StateGraph
 from langsmith import traceable
 
 from .deps import SupervisorDeps
+from .incident_rules import assess_services
 from .retry import with_retry
 from .reporting import default_step_ids, render_report, report_is_grounded
 from .targets import CLARIFICATION_PREFIX, SYSTEM_NAME, extract_targets, load_known_systems, pending_query
@@ -144,8 +145,8 @@ async def plan_node(state: AgentState, deps: SupervisorDeps) -> dict:
     )
     result, usage = deps.fast_llm.plan(state["query"], procedure)
     # 모델이 다른 서비스를 추가하거나 명시된 대상을 누락해도 실제 조회는 검증된 대상만 한다.
-    other_tasks = [t for t in result["tasks"]
-                   if not (t["agent"] == "research" and t.get("kind") == "monitoring")]
+    # 매뉴얼도 모델의 추측이 아니라 실제 관측 결과에서 서비스별로 결정한다.
+    other_tasks = [t for t in result["tasks"] if t["agent"] != "research"]
     result["tasks"] = [
         {"id": f"target-monitoring-{i}", "agent": "research", "kind": "monitoring",
          "target": target, "status": "pending"}
@@ -195,6 +196,14 @@ async def research_node(state: AgentState, deps: SupervisorDeps) -> dict:
     if needs_runbook:
         runbook_server, runbook_uri_template = await deps.mcp.find_resource_template(
             "get_incident_runbook")
+    started = time.perf_counter()
+    # 같은 유형이 여러 서비스에 적용돼도 MCP 원문 조회는 한 번만 수행한다.
+    incident_types = list(dict.fromkeys(tasks[i]["target"] for i in research_indices
+                                       if tasks[i]["kind"] != "monitoring"))
+    bodies = await asyncio.gather(*(
+        deps.mcp.read_resource(runbook_uri_template.format(incident_type=incident_type), server=runbook_server)
+        for incident_type in incident_types))
+    runbook_bodies = dict(zip(incident_types, bodies))
 
     async def run_one(idx: int) -> dict:
         task = tasks[idx]
@@ -204,11 +213,9 @@ async def research_node(state: AgentState, deps: SupervisorDeps) -> dict:
                 deps.mcp.call_tool, "get_monitoring_status",
                 {"system_name": task["target"]})
             return {"idx": idx, "source": "monitoring", "data": data, "retries": retries}
-        uri = runbook_uri_template.format(incident_type=task["target"])
-        data = await deps.mcp.read_resource(uri, server=runbook_server)
+        data = runbook_bodies[task["target"]]
         return {"idx": idx, "source": "runbook", "data": data, "retries": 0}
 
-    started = time.perf_counter()
     results = await asyncio.gather(*(run_one(i) for i in research_indices))
     elapsed = round(time.perf_counter() - started, 2)
 
@@ -217,56 +224,41 @@ async def research_node(state: AgentState, deps: SupervisorDeps) -> dict:
     events = list(state["events"])
     for r in results:
         new_tasks[r["idx"]]["status"] = "done"
-        collected.append({"source": r["source"], "data": r["data"]})
+        source = {"source": r["source"], "data": r["data"]}
+        if r["source"] == "runbook":
+            source.update(system_name=new_tasks[r["idx"]]["system_name"],
+                          incident_type=new_tasks[r["idx"]]["target"])
+        collected.append(source)
         retry_total += r["retries"]
         events.append({"type": "TaskCompleted", "id": new_tasks[r["idx"]]["id"],
                        "source": r["source"], "target": new_tasks[r["idx"]]["target"],
+                       "system_name": new_tasks[r["idx"]].get("system_name"),
                        "retries": r["retries"]})
     return {"tasks": new_tasks, "collected": collected, "retry_count": retry_total,
             "parallel_elapsed": elapsed, "events": events}
 
 
-# 수집된 모니터링 결과(상태·알림 문구)를 보고 어떤 runbook이 맞는지 고른다. LLM에게
-# 다시 묻는 대신 코드 레벨 규칙으로 판단한다 — gate(Wave 6)·replan(Wave 7)과 같은 설계
-# 원칙: 모델의 판단을 그대로 믿지 않고, 실측 데이터로 검증 가능한 결정은 코드가 내린다.
-_INCIDENT_TYPE_RULES = [
-    ("latency", "high-latency"),
-    ("pool", "high-latency"),
-    ("cpu", "cpu-spike"),
-    ("memory", "memory-leak"),
-    ("heap", "memory-leak"),
-    ("timeout", "network-timeout"),
-    ("network", "network-timeout"),
-    ("disk", "disk-full"),
-    ("down", "db-down"),
-]
-
-
-def _classify_incident_type(collected: list[dict]) -> str:
-    text = " ".join(
-        f"{c['data'].get('status', '')} " + " ".join(c["data"].get("alerts", []))
-        for c in collected if c.get("source") == "monitoring"
-    ).lower()
-    for keyword, incident_type in _INCIDENT_TYPE_RULES:
-        if keyword in text:
-            return incident_type
-    return "db-down"   # 매칭되는 증상이 없으면 가장 일반적인 장애 대응 절차로 폴백
-
-
 @traceable(name="replan_check_node")
 async def replan_check_node(state: AgentState, deps: SupervisorDeps) -> dict:
-    """Wave 7 — 1차 수집 결과 평가. runbook이 없으면 gap task만 추가해 재조사."""
-    has_runbook = any(c["source"] == "runbook" for c in state.get("collected", []))
+    """서비스·장애 유형별 누락 매뉴얼을 모두 수집한다. 정상 서비스에는 강제 적용하지 않는다."""
+    collected = [c for c in state.get("collected", []) if c["source"] != "assessment"]
+    assessments = assess_services(collected)
+    present = {(c.get("system_name"), c.get("incident_type")) for c in collected
+               if c["source"] == "runbook"}
+    missing = [(a["data"]["system_name"], incident_type)
+               for a in assessments for incident_type in a["data"]["incident_types"]
+               if (a["data"]["system_name"], incident_type) not in present]
     rounds = state.get("replan_rounds", 0)
-    if has_runbook or rounds >= 1:
+    if not missing:
         verdict = {"type": "ReplanCheck", "round": rounds, "is_sufficient": True}
-        return {"events": state["events"] + [verdict]}
-    incident_type = _classify_incident_type(state.get("collected", []))
-    gap_task = {"id": "task-gap-runbook", "agent": "research", "kind": "runbook",
-                "target": incident_type, "status": "pending"}
+        return {"collected": collected + assessments, "events": state["events"] + [verdict]}
+    gap_tasks = [{"id": f"task-runbook-{rounds}-{i}", "agent": "research", "kind": "runbook",
+                  "target": incident_type, "system_name": system_name, "status": "pending"}
+                 for i, (system_name, incident_type) in enumerate(missing)]
     verdict = {"type": "ReplanCheck", "round": rounds, "is_sufficient": False,
-               "gap_task": gap_task["id"], "target": incident_type}
-    return {"tasks": state["tasks"] + [gap_task], "replan_rounds": rounds + 1,
+               "targets": [{"system_name": s, "incident_type": t} for s, t in missing]}
+    return {"tasks": state["tasks"] + gap_tasks, "collected": collected + assessments,
+            "replan_rounds": rounds + 1,
             "events": state["events"] + [verdict]}
 
 

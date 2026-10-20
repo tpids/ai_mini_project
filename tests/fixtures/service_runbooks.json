@@ -1,0 +1,18 @@
+[
+  {
+    "case": "payments_cache",
+    "query": "payments-service랑 cache-service 둘 다 저하됐는데 공통 원인이 있는지 분석해줘",
+    "monitoring": [
+      {"system_name": "payments-service", "status": "degraded", "cpu_percent": 96.7, "memory_percent": 57.9, "alerts": ["CPU 91% (threshold 80%)", "payments-service-3 instance responding slow"]},
+      {"system_name": "cache-service", "status": "degraded", "cpu_percent": 39.5, "memory_percent": 87.8, "alerts": ["memory usage climbing steadily over 6h", "heap near limit"]}
+    ]
+  },
+  {
+    "case": "web_auth",
+    "query": "web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",
+    "monitoring": [
+      {"system_name": "web-01", "status": "healthy", "cpu_percent": 31.8, "memory_percent": 46.9, "alerts": []},
+      {"system_name": "auth-service", "status": "degraded", "cpu_percent": 84.1, "memory_percent": 64.1, "alerts": ["p95 latency 2.4s (threshold 1.0s)", "connection pool 92% used"]}
+    ]
+  }
+]

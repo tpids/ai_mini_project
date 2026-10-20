@@ -1,0 +1,442 @@
+{
+  "method": "동일 고정 입력과 결정론적 모델로 그래프 전체의 매뉴얼 수집·보고서 전후 비교. 실제 모델 성능 비교는 아님.",
+  "cases": [
+    {
+      "case": "payments_cache",
+      "query": "payments-service랑 cache-service 둘 다 저하됐는데 공통 원인이 있는지 분석해줘",
+      "monitoring": [
+        {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 96.7,
+          "memory_percent": 57.9,
+          "alerts": [
+            "CPU 91% (threshold 80%)",
+            "payments-service-3 instance responding slow"
+          ]
+        },
+        {
+          "system_name": "cache-service",
+          "status": "degraded",
+          "cpu_percent": 39.5,
+          "memory_percent": 87.8,
+          "alerts": [
+            "memory usage climbing steadily over 6h",
+            "heap near limit"
+          ]
+        }
+      ],
+      "before": {
+        "reply": "1) 확인된 사실\n- payments-service: 상태=degraded, CPU 96.7%, 메모리 57.9%\n  알림 원문: [\"CPU 91% (threshold 80%)\", \"payments-service-3 instance responding slow\"]\n- cache-service: 상태=degraded, CPU 39.5%, 메모리 87.8%\n  알림 원문: [\"memory usage climbing steadily over 6h\", \"heap near limit\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- [Runbook: CPU 급증 대응 절차 / 1번] get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n- [Runbook: CPU 급증 대응 절차 / 2번] 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n- [Runbook: CPU 급증 대응 절차 / 3번] CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.",
+        "runbooks": [
+          {
+            "source": "runbook",
+            "data": "# Runbook: CPU 급증 대응 절차\n\n1. get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n2. 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n3. CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.\n4. 급증이 특정 배포 직후 시작됐다면 직전 배포를 롤백하고 원인 분석은 별도로 진행한다.\n5. 정상화 후 프로파일링 결과를 바탕으로 핫스팟 코드를 식별해 최적화 작업을 등록한다.\n"
+          }
+        ],
+        "events": [
+          {
+            "type": "RouteDecided",
+            "route": "incident"
+          },
+          {
+            "type": "TargetChecked",
+            "status": "valid",
+            "targets": [
+              "payments-service",
+              "cache-service"
+            ]
+          },
+          {
+            "type": "PlanCreated",
+            "task_count": 3,
+            "targets": [
+              "payments-service",
+              "cache-service"
+            ]
+          },
+          {
+            "type": "GateApplied",
+            "removed_analysis_tasks": 1
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-0",
+            "source": "monitoring",
+            "target": "payments-service",
+            "retries": 0
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-1",
+            "source": "monitoring",
+            "target": "cache-service",
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 0,
+            "is_sufficient": false,
+            "gap_task": "task-gap-runbook",
+            "target": "cpu-spike"
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "task-gap-runbook",
+            "source": "runbook",
+            "target": "cpu-spike",
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 1,
+            "is_sufficient": true
+          },
+          {
+            "type": "AnalysisSkipped",
+            "reason": "analysis task 0개"
+          },
+          {
+            "type": "DraftWritten",
+            "attempt": 1,
+            "length": 760
+          },
+          {
+            "type": "Validation",
+            "attempt": 1,
+            "verdict": "합격",
+            "fallback": false
+          },
+          {
+            "type": "Finalize",
+            "pipeline": "incident-v2"
+          }
+        ]
+      },
+      "after": {
+        "reply": "1) 확인된 사실\n- payments-service: 상태=degraded, CPU 96.7%, 메모리 57.9%\n  알림 원문: [\"CPU 91% (threshold 80%)\", \"payments-service-3 instance responding slow\"]\n- cache-service: 상태=degraded, CPU 39.5%, 메모리 87.8%\n  알림 원문: [\"memory usage climbing steadily over 6h\", \"heap near limit\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- 대상 서비스: payments-service\n  - [Runbook: CPU 급증 대응 절차 / 1번] get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 2번] 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 3번] CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.\n- 대상 서비스: cache-service\n  - [Runbook: 메모리 누수(Memory Leak) 대응 절차 / 1번] get_monitoring_status로 메모리 사용률 추세(시간에 따라 꾸준히 증가하는지)를 확인한다.\n  - [Runbook: 메모리 누수(Memory Leak) 대응 절차 / 2번] OOM 직전(90% 이상)이면 해당 프로세스를 즉시 재시작해 서비스 중단을 막는다 — 재시작은 임시 조치일 뿐임을 기록해둔다.\n  - [Runbook: 메모리 누수(Memory Leak) 대응 절차 / 3번] 힙 덤프 또는 프로파일링 도구로 어떤 객체가 계속 쌓이는지 확인한다.",
+        "runbooks": [
+          {
+            "source": "runbook",
+            "data": "# Runbook: CPU 급증 대응 절차\n\n1. get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n2. 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n3. CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.\n4. 급증이 특정 배포 직후 시작됐다면 직전 배포를 롤백하고 원인 분석은 별도로 진행한다.\n5. 정상화 후 프로파일링 결과를 바탕으로 핫스팟 코드를 식별해 최적화 작업을 등록한다.\n",
+            "system_name": "payments-service",
+            "incident_type": "cpu-spike"
+          },
+          {
+            "source": "runbook",
+            "data": "# Runbook: 메모리 누수(Memory Leak) 대응 절차\n\n1. get_monitoring_status로 메모리 사용률 추세(시간에 따라 꾸준히 증가하는지)를 확인한다.\n2. OOM 직전(90% 이상)이면 해당 프로세스를 즉시 재시작해 서비스 중단을 막는다 — 재시작은 임시 조치일 뿐임을 기록해둔다.\n3. 힙 덤프 또는 프로파일링 도구로 어떤 객체가 계속 쌓이는지 확인한다.\n4. 캐시 무제한 증가, 커넥션 미반환, 이벤트 리스너 중복 등록 같은 패턴이 최근 배포에 있었는지 점검한다.\n5. 원인이 된 배포가 있으면 롤백하고, 컨테이너 메모리 상한선을 재확인해 재발 시 더 빨리 감지되도록 조정한다.\n",
+            "system_name": "cache-service",
+            "incident_type": "memory-leak"
+          }
+        ],
+        "events": [
+          {
+            "type": "RouteDecided",
+            "route": "incident"
+          },
+          {
+            "type": "TargetChecked",
+            "status": "valid",
+            "targets": [
+              "payments-service",
+              "cache-service"
+            ]
+          },
+          {
+            "type": "PlanCreated",
+            "task_count": 3,
+            "targets": [
+              "payments-service",
+              "cache-service"
+            ]
+          },
+          {
+            "type": "GateApplied",
+            "removed_analysis_tasks": 1
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-0",
+            "source": "monitoring",
+            "target": "payments-service",
+            "system_name": null,
+            "retries": 0
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-1",
+            "source": "monitoring",
+            "target": "cache-service",
+            "system_name": null,
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 0,
+            "is_sufficient": false,
+            "targets": [
+              {
+                "system_name": "payments-service",
+                "incident_type": "cpu-spike"
+              },
+              {
+                "system_name": "cache-service",
+                "incident_type": "memory-leak"
+              }
+            ]
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "task-runbook-0-0",
+            "source": "runbook",
+            "target": "cpu-spike",
+            "system_name": "payments-service",
+            "retries": 0
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "task-runbook-0-1",
+            "source": "runbook",
+            "target": "memory-leak",
+            "system_name": "cache-service",
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 1,
+            "is_sufficient": true
+          },
+          {
+            "type": "AnalysisSkipped",
+            "reason": "analysis task 0개"
+          },
+          {
+            "type": "DraftWritten",
+            "attempt": 1,
+            "length": 1124
+          },
+          {
+            "type": "Validation",
+            "attempt": 1,
+            "verdict": "합격",
+            "fallback": false
+          },
+          {
+            "type": "Finalize",
+            "pipeline": "incident-v2"
+          }
+        ],
+        "report_mode": "source_selected",
+        "resource_reads": 2
+      }
+    },
+    {
+      "case": "web_auth",
+      "query": "web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",
+      "monitoring": [
+        {
+          "system_name": "web-01",
+          "status": "healthy",
+          "cpu_percent": 31.8,
+          "memory_percent": 46.9,
+          "alerts": []
+        },
+        {
+          "system_name": "auth-service",
+          "status": "degraded",
+          "cpu_percent": 84.1,
+          "memory_percent": 64.1,
+          "alerts": [
+            "p95 latency 2.4s (threshold 1.0s)",
+            "connection pool 92% used"
+          ]
+        }
+      ],
+      "before": {
+        "reply": "1) 확인된 사실\n- web-01: 상태=healthy, CPU 31.8%, 메모리 46.9%\n  알림 원문: []\n- auth-service: 상태=degraded, CPU 84.1%, 메모리 64.1%\n  알림 원문: [\"p95 latency 2.4s (threshold 1.0s)\", \"connection pool 92% used\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- [Runbook: 응답 지연(High Latency) 대응 절차 / 1번] get_monitoring_status로 p95 지연시간과 커넥션 풀 사용률을 확인한다.\n- [Runbook: 응답 지연(High Latency) 대응 절차 / 2번] 커넥션 풀 사용률이 90%를 넘으면 풀 크기를 늘리거나 느린 쿼리/외부 호출에 타임아웃을 건다.\n- [Runbook: 응답 지연(High Latency) 대응 절차 / 3번] 지연이 특정 리전/인스턴스에 몰려 있으면 해당 인스턴스를 로드밸런서에서 일시 제외한다.",
+        "runbooks": [
+          {
+            "source": "runbook",
+            "data": "# Runbook: 응답 지연(High Latency) 대응 절차\n\n1. get_monitoring_status로 p95 지연시간과 커넥션 풀 사용률을 확인한다.\n2. 커넥션 풀 사용률이 90%를 넘으면 풀 크기를 늘리거나 느린 쿼리/외부 호출에 타임아웃을 건다.\n3. 지연이 특정 리전/인스턴스에 몰려 있으면 해당 인스턴스를 로드밸런서에서 일시 제외한다.\n4. 5분 내 p95가 임계치(1.0s) 아래로 내려오지 않으면 캐시 계층 또는 읽기 복제본으로 트래픽을 분산한다.\n5. 정상화 후 느린 쿼리 로그를 분석해 근본 원인을 문서화하고 후속 최적화 티켓을 등록한다.\n"
+          }
+        ],
+        "events": [
+          {
+            "type": "RouteDecided",
+            "route": "incident"
+          },
+          {
+            "type": "TargetChecked",
+            "status": "valid",
+            "targets": [
+              "web-01",
+              "auth-service"
+            ]
+          },
+          {
+            "type": "PlanCreated",
+            "task_count": 3,
+            "targets": [
+              "web-01",
+              "auth-service"
+            ]
+          },
+          {
+            "type": "GateApplied",
+            "removed_analysis_tasks": 1
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-0",
+            "source": "monitoring",
+            "target": "web-01",
+            "retries": 0
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-1",
+            "source": "monitoring",
+            "target": "auth-service",
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 0,
+            "is_sufficient": false,
+            "gap_task": "task-gap-runbook",
+            "target": "high-latency"
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "task-gap-runbook",
+            "source": "runbook",
+            "target": "high-latency",
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 1,
+            "is_sufficient": true
+          },
+          {
+            "type": "AnalysisSkipped",
+            "reason": "analysis task 0개"
+          },
+          {
+            "type": "DraftWritten",
+            "attempt": 1,
+            "length": 708
+          },
+          {
+            "type": "Validation",
+            "attempt": 1,
+            "verdict": "합격",
+            "fallback": false
+          },
+          {
+            "type": "Finalize",
+            "pipeline": "incident-v2"
+          }
+        ]
+      },
+      "after": {
+        "reply": "1) 확인된 사실\n- web-01: 상태=healthy, CPU 31.8%, 메모리 46.9%\n  알림 원문: []\n  확인 범위: 현재 관측에서 분류 가능한 장애 징후가 없어 장애 대응 매뉴얼을 적용하지 않았습니다. 과거 급증이나 일시적 장애 여부는 시계열 확인이 필요합니다.\n- auth-service: 상태=degraded, CPU 84.1%, 메모리 64.1%\n  알림 원문: [\"p95 latency 2.4s (threshold 1.0s)\", \"connection pool 92% used\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- 대상 서비스: auth-service\n  - [Runbook: 응답 지연(High Latency) 대응 절차 / 1번] get_monitoring_status로 p95 지연시간과 커넥션 풀 사용률을 확인한다.\n  - [Runbook: 응답 지연(High Latency) 대응 절차 / 2번] 커넥션 풀 사용률이 90%를 넘으면 풀 크기를 늘리거나 느린 쿼리/외부 호출에 타임아웃을 건다.\n  - [Runbook: 응답 지연(High Latency) 대응 절차 / 3번] 지연이 특정 리전/인스턴스에 몰려 있으면 해당 인스턴스를 로드밸런서에서 일시 제외한다.",
+        "runbooks": [
+          {
+            "source": "runbook",
+            "data": "# Runbook: 응답 지연(High Latency) 대응 절차\n\n1. get_monitoring_status로 p95 지연시간과 커넥션 풀 사용률을 확인한다.\n2. 커넥션 풀 사용률이 90%를 넘으면 풀 크기를 늘리거나 느린 쿼리/외부 호출에 타임아웃을 건다.\n3. 지연이 특정 리전/인스턴스에 몰려 있으면 해당 인스턴스를 로드밸런서에서 일시 제외한다.\n4. 5분 내 p95가 임계치(1.0s) 아래로 내려오지 않으면 캐시 계층 또는 읽기 복제본으로 트래픽을 분산한다.\n5. 정상화 후 느린 쿼리 로그를 분석해 근본 원인을 문서화하고 후속 최적화 티켓을 등록한다.\n",
+            "system_name": "auth-service",
+            "incident_type": "high-latency"
+          }
+        ],
+        "events": [
+          {
+            "type": "RouteDecided",
+            "route": "incident"
+          },
+          {
+            "type": "TargetChecked",
+            "status": "valid",
+            "targets": [
+              "web-01",
+              "auth-service"
+            ]
+          },
+          {
+            "type": "PlanCreated",
+            "task_count": 3,
+            "targets": [
+              "web-01",
+              "auth-service"
+            ]
+          },
+          {
+            "type": "GateApplied",
+            "removed_analysis_tasks": 1
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-0",
+            "source": "monitoring",
+            "target": "web-01",
+            "system_name": null,
+            "retries": 0
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-1",
+            "source": "monitoring",
+            "target": "auth-service",
+            "system_name": null,
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 0,
+            "is_sufficient": false,
+            "targets": [
+              {
+                "system_name": "auth-service",
+                "incident_type": "high-latency"
+              }
+            ]
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "task-runbook-0-0",
+            "source": "runbook",
+            "target": "high-latency",
+            "system_name": "auth-service",
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 1,
+            "is_sufficient": true
+          },
+          {
+            "type": "AnalysisSkipped",
+            "reason": "analysis task 0개"
+          },
+          {
+            "type": "DraftWritten",
+            "attempt": 1,
+            "length": 828
+          },
+          {
+            "type": "Validation",
+            "attempt": 1,
+            "verdict": "합격",
+            "fallback": false
+          },
+          {
+            "type": "Finalize",
+            "pipeline": "incident-v2"
+          }
+        ],
+        "report_mode": "source_selected",
+        "resource_reads": 1
+      }
+    }
+  ]
+}

@@ -120,8 +120,8 @@ const STEP_LABELS = {
   GateApplied: e => e.removed_analysis_tasks ? `불필요한 작업 ${e.removed_analysis_tasks}건 제거` : null,
   TaskCompleted: e => (e.source === 'monitoring'
       ? `모니터링 지표 확인 (시스템: ${e.target})`
-      : `대응 매뉴얼(runbook) 조회 (장애유형: ${e.target})`) + (e.retries ? ' (재시도 성공)' : ''),
-  ReplanCheck: e => e.is_sufficient ? null : `정보 부족 → 장애유형 "${e.target}"로 추가 조사`,
+      : `대응 매뉴얼 조회 (서비스: ${e.system_name}, 장애유형: ${e.target})`) + (e.retries ? ' (재시도 성공)' : ''),
+  ReplanCheck: e => e.is_sufficient ? null : `서비스별 매뉴얼 추가 조회: ${e.targets.map(t => `${t.system_name} → ${t.incident_type}`).join(', ')}`,
   DraftWritten: e => `답변 초안 작성 (시도 ${e.attempt})`,
   Validation: e => e.fallback ? '원문 기반 기본 보고서 사용' : (e.verdict === '합격' ? '근거·원문 일치 검수 통과' : '검수 반려 → 다시 작성'),
   Finalize: () => '최종 답변 완성',
