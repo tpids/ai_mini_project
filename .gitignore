@@ -1,1 +1,25 @@
+# Local secrets (keep shareable configuration templates)
 .env
+.env.*
+!.env.example
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local conversation history and SQLite sidecar files
+session.db
+session.db-*
+
+# Runtime logs
+*.log
+
+# macOS metadata
+.DS_Store
