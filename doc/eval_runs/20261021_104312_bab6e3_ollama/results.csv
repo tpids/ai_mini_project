@@ -1,0 +1,13 @@
+variant,backend,phase,repeat,case_id,turn,query,target_correct,manual_hits,manual_required,manual_exact,unexpected_manuals,elapsed_seconds,error,report_mode,expected_targets,actual_targets
+before,ollama,measured,1,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",False,0,1,False,"[""db-down""]",33.965156166999805,,,"[""web-01"", ""auth-service""]","[""web-01""]"
+after,ollama,measured,1,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],24.535889667000447,,source_selected,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+before,ollama,measured,1,unknown_service,1,billing-service 응답 지연 진단해줘,False,0,0,False,"[""high-latency""]",25.798768124999697,,,[],"[""auth-service""]"
+after,ollama,measured,1,unknown_service,1,billing-service 응답 지연 진단해줘,True,0,0,True,[],1.0076356670006135,,,[],[]
+after,ollama,measured,2,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],24.310269415999755,,source_selected,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+before,ollama,measured,2,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",False,0,1,False,"[""db-down""]",33.478470541000206,,,"[""web-01"", ""auth-service""]","[""web-01""]"
+after,ollama,measured,2,unknown_service,1,billing-service 응답 지연 진단해줘,True,0,0,True,[],1.0145934160000252,,,[],[]
+before,ollama,measured,2,unknown_service,1,billing-service 응답 지연 진단해줘,False,0,0,False,"[""high-latency""]",25.31445949999943,,,[],"[""auth-service""]"
+before,ollama,measured,3,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",False,0,1,False,"[""db-down""]",34.17725620799956,,,"[""web-01"", ""auth-service""]","[""web-01""]"
+after,ollama,measured,3,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],25.005337290999705,,source_selected,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+before,ollama,measured,3,unknown_service,1,billing-service 응답 지연 진단해줘,False,0,0,False,"[""high-latency""]",26.08977083300033,,,[],"[""auth-service""]"
+after,ollama,measured,3,unknown_service,1,billing-service 응답 지연 진단해줘,True,0,0,True,[],1.0163812910004708,,,[],[]

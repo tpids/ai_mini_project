@@ -1,0 +1,313 @@
+{
+  "schema_version": 1,
+  "description": "실습용 고정 모니터링 데이터와 사람이 지정한 기대 결과. 실제 관측 시각 또는 운영 데이터가 아님. 분류 함수에서 정답을 생성하지 않음.",
+  "monitoring": {
+    "auth-service": {
+      "system_name": "auth-service",
+      "status": "degraded",
+      "cpu_percent": 78.0,
+      "memory_percent": 61.0,
+      "alerts": [
+        "p95 latency 2.4s (threshold 1.0s)",
+        "connection pool 92% used"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "web-01": {
+      "system_name": "web-01",
+      "status": "healthy",
+      "cpu_percent": 34.0,
+      "memory_percent": 48.0,
+      "alerts": [],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "payments-service": {
+      "system_name": "payments-service",
+      "status": "degraded",
+      "cpu_percent": 91.0,
+      "memory_percent": 55.0,
+      "alerts": [
+        "CPU 91% (threshold 80%)",
+        "payments-service-3 instance responding slow"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "cache-service": {
+      "system_name": "cache-service",
+      "status": "degraded",
+      "cpu_percent": 42.0,
+      "memory_percent": 89.0,
+      "alerts": [
+        "memory usage climbing steadily over 6h",
+        "heap near limit"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "gateway-service": {
+      "system_name": "gateway-service",
+      "status": "degraded",
+      "cpu_percent": 30.0,
+      "memory_percent": 45.0,
+      "alerts": [
+        "upstream timeout to payments-service (504)",
+        "network packet loss 3%"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "log-service": {
+      "system_name": "log-service",
+      "status": "degraded",
+      "cpu_percent": 20.0,
+      "memory_percent": 35.0,
+      "alerts": [
+        "disk usage 95% on /var/log",
+        "disk space low"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    }
+  },
+  "cases": [
+    {
+      "id": "payments_cpu",
+      "turns": [
+        {
+          "query": "payments-service CPU 급증 원인 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "cpu-spike"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "cache_memory",
+      "turns": [
+        {
+          "query": "cache-service 메모리 증가 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "cache-service"
+          ],
+          "expected_runbooks": [
+            "memory-leak"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "log_disk",
+      "turns": [
+        {
+          "query": "log-service 디스크 부족 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "log-service"
+          ],
+          "expected_runbooks": [
+            "disk-full"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "gateway_timeout",
+      "turns": [
+        {
+          "query": "gateway-service 타임아웃 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "gateway-service"
+          ],
+          "expected_runbooks": [
+            "network-timeout"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "auth_latency",
+      "turns": [
+        {
+          "query": "auth-service 로그인 지연 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "auth-service"
+          ],
+          "expected_runbooks": [
+            "high-latency"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "healthy_web",
+      "turns": [
+        {
+          "query": "web-01 CPU 급증 원인 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "web-01"
+          ],
+          "expected_runbooks": [],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "payments_cache",
+      "turns": [
+        {
+          "query": "payments-service랑 cache-service 둘 다 저하됐는데 공통 원인을 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service",
+            "cache-service"
+          ],
+          "expected_runbooks": [
+            "cpu-spike",
+            "memory-leak"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "web_auth",
+      "turns": [
+        {
+          "query": "web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "web-01",
+            "auth-service"
+          ],
+          "expected_runbooks": [
+            "high-latency"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "one_service_two_types",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 95.0,
+          "memory_percent": 94.0,
+          "alerts": [
+            "CPU high",
+            "memory usage high"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service CPU와 메모리 급증 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "cpu-spike",
+            "memory-leak"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "unknown_service",
+      "turns": [
+        {
+          "query": "billing-service 응답 지연 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [],
+          "expected_runbooks": [],
+          "required_reply_tokens": [
+            "billing-service",
+            "등록"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "missing_target",
+      "turns": [
+        {
+          "query": "응답 지연 원인 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [],
+          "expected_runbooks": [],
+          "required_reply_tokens": [
+            "서비스",
+            "알려"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "clarify_followup",
+      "turns": [
+        {
+          "query": "응답 지연 원인 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [],
+          "expected_runbooks": [],
+          "required_reply_tokens": [
+            "서비스",
+            "알려"
+          ]
+        },
+        {
+          "query": "payments-service",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "cpu-spike"
+          ],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "greeting",
+      "turns": [
+        {
+          "query": "안녕, 너는 누구야?",
+          "expected_route": "chat",
+          "expected_targets": [],
+          "expected_runbooks": [],
+          "required_reply_tokens": []
+        }
+      ]
+    },
+    {
+      "id": "mixed_unknown",
+      "turns": [
+        {
+          "query": "payments-service와 billing-service 지연 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [],
+          "expected_runbooks": [],
+          "required_reply_tokens": [
+            "billing-service",
+            "등록"
+          ]
+        }
+      ]
+    }
+  ]
+}

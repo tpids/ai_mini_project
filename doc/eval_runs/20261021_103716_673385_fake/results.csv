@@ -1,0 +1,91 @@
+variant,backend,phase,repeat,case_id,turn,query,target_correct,manual_hits,manual_required,manual_exact,unexpected_manuals,elapsed_seconds,error,report_mode,expected_targets,actual_targets
+before,fake,measured,1,payments_cpu,1,payments-service CPU 급증 원인 진단해줘,False,1,1,True,[],0.7171455829993647,,,"[""payments-service""]","[""payments-service"", ""web-01""]"
+after,fake,measured,1,payments_cpu,1,payments-service CPU 급증 원인 진단해줘,True,1,1,True,[],0.712720165999599,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,1,cache_memory,1,cache-service 메모리 증가 장애 진단해줘,False,1,1,True,[],0.7144837499999994,,,"[""cache-service""]","[""cache-service"", ""web-01""]"
+after,fake,measured,1,cache_memory,1,cache-service 메모리 증가 장애 진단해줘,True,1,1,True,[],0.713785208000445,,source_selected,"[""cache-service""]","[""cache-service""]"
+before,fake,measured,1,log_disk,1,log-service 디스크 부족 장애 진단해줘,False,1,1,True,[],0.7167999579996831,,,"[""log-service""]","[""log-service"", ""web-01""]"
+after,fake,measured,1,log_disk,1,log-service 디스크 부족 장애 진단해줘,True,1,1,True,[],0.7160881669997252,,source_selected,"[""log-service""]","[""log-service""]"
+before,fake,measured,1,gateway_timeout,1,gateway-service 타임아웃 장애 진단해줘,False,1,1,True,[],0.7182488749995173,,,"[""gateway-service""]","[""gateway-service"", ""web-01""]"
+after,fake,measured,1,gateway_timeout,1,gateway-service 타임아웃 장애 진단해줘,True,1,1,True,[],0.7143629160000273,,source_selected,"[""gateway-service""]","[""gateway-service""]"
+before,fake,measured,1,auth_latency,1,auth-service 로그인 지연 진단해줘,False,1,1,True,[],0.7174214159995245,,,"[""auth-service""]","[""auth-service"", ""web-01""]"
+after,fake,measured,1,auth_latency,1,auth-service 로그인 지연 진단해줘,True,1,1,True,[],0.7165276249997987,,source_selected,"[""auth-service""]","[""auth-service""]"
+before,fake,measured,1,healthy_web,1,web-01 CPU 급증 원인 진단해줘,True,0,0,False,"[""db-down""]",0.7156089999998585,,,"[""web-01""]","[""web-01""]"
+after,fake,measured,1,healthy_web,1,web-01 CPU 급증 원인 진단해줘,True,0,0,True,[],0.3592174579998755,,source_selected,"[""web-01""]","[""web-01""]"
+before,fake,measured,1,payments_cache,1,payments-service랑 cache-service 둘 다 저하됐는데 공통 원인을 진단해줘,False,1,2,False,[],0.7161834999997154,,,"[""payments-service"", ""cache-service""]","[""payments-service"", ""cache-service"", ""web-01""]"
+after,fake,measured,1,payments_cache,1,payments-service랑 cache-service 둘 다 저하됐는데 공통 원인을 진단해줘,True,2,2,True,[],0.7173715830003857,,source_selected,"[""payments-service"", ""cache-service""]","[""payments-service"", ""cache-service""]"
+before,fake,measured,1,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],0.7199237499999072,,,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+after,fake,measured,1,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],0.7156900419995509,,source_selected,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+before,fake,measured,1,one_service_two_types,1,payments-service CPU와 메모리 급증 진단해줘,False,1,2,False,[],0.7181097089996911,,,"[""payments-service""]","[""payments-service"", ""web-01""]"
+after,fake,measured,1,one_service_two_types,1,payments-service CPU와 메모리 급증 진단해줘,True,2,2,True,[],0.7161029999997481,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,1,unknown_service,1,billing-service 응답 지연 진단해줘,False,0,0,False,"[""db-down""]",0.7162899999993897,,,[],"[""billing-service"", ""web-01""]"
+after,fake,measured,1,unknown_service,1,billing-service 응답 지연 진단해줘,True,0,0,True,[],0.002999624999574735,,,[],[]
+before,fake,measured,1,missing_target,1,응답 지연 원인 진단해줘,False,0,0,False,"[""high-latency""]",0.715474541999356,,,[],"[""auth-service"", ""web-01""]"
+after,fake,measured,1,missing_target,1,응답 지연 원인 진단해줘,True,0,0,True,[],0.003408708000279148,,,[],[]
+before,fake,measured,1,clarify_followup,1,응답 지연 원인 진단해줘,False,0,0,False,"[""high-latency""]",0.7150784590003241,,,[],"[""auth-service"", ""web-01""]"
+before,fake,measured,1,clarify_followup,2,payments-service,False,0,1,False,[],0.0021457499997268314,,,"[""payments-service""]",[]
+after,fake,measured,1,clarify_followup,1,응답 지연 원인 진단해줘,True,0,0,True,[],0.0034019589993476984,,,[],[]
+after,fake,measured,1,clarify_followup,2,payments-service,True,1,1,True,[],0.7153030839999701,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,1,greeting,1,"안녕, 너는 누구야?",True,0,0,True,[],0.0031431249999513966,,,[],[]
+after,fake,measured,1,greeting,1,"안녕, 너는 누구야?",True,0,0,True,[],0.002658874999724503,,,[],[]
+before,fake,measured,1,mixed_unknown,1,payments-service와 billing-service 지연 진단해줘,False,0,0,False,"[""cpu-spike""]",0.7181239159999677,,,[],"[""payments-service"", ""billing-service"", ""web-01""]"
+after,fake,measured,1,mixed_unknown,1,payments-service와 billing-service 지연 진단해줘,True,0,0,True,[],0.0032489169998370926,,,[],[]
+after,fake,measured,2,payments_cpu,1,payments-service CPU 급증 원인 진단해줘,True,1,1,True,[],0.7136697079995429,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,2,payments_cpu,1,payments-service CPU 급증 원인 진단해줘,False,1,1,True,[],0.7152574589999858,,,"[""payments-service""]","[""payments-service"", ""web-01""]"
+after,fake,measured,2,cache_memory,1,cache-service 메모리 증가 장애 진단해줘,True,1,1,True,[],0.715346457999658,,source_selected,"[""cache-service""]","[""cache-service""]"
+before,fake,measured,2,cache_memory,1,cache-service 메모리 증가 장애 진단해줘,False,1,1,True,[],0.7171157080001649,,,"[""cache-service""]","[""cache-service"", ""web-01""]"
+after,fake,measured,2,log_disk,1,log-service 디스크 부족 장애 진단해줘,True,1,1,True,[],0.7161497500001133,,source_selected,"[""log-service""]","[""log-service""]"
+before,fake,measured,2,log_disk,1,log-service 디스크 부족 장애 진단해줘,False,1,1,True,[],0.7187248749996797,,,"[""log-service""]","[""log-service"", ""web-01""]"
+after,fake,measured,2,gateway_timeout,1,gateway-service 타임아웃 장애 진단해줘,True,1,1,True,[],0.7159471250006391,,source_selected,"[""gateway-service""]","[""gateway-service""]"
+before,fake,measured,2,gateway_timeout,1,gateway-service 타임아웃 장애 진단해줘,False,1,1,True,[],0.7175877079998827,,,"[""gateway-service""]","[""gateway-service"", ""web-01""]"
+after,fake,measured,2,auth_latency,1,auth-service 로그인 지연 진단해줘,True,1,1,True,[],0.7160605830003988,,source_selected,"[""auth-service""]","[""auth-service""]"
+before,fake,measured,2,auth_latency,1,auth-service 로그인 지연 진단해줘,False,1,1,True,[],0.7176555830001234,,,"[""auth-service""]","[""auth-service"", ""web-01""]"
+after,fake,measured,2,healthy_web,1,web-01 CPU 급증 원인 진단해줘,True,0,0,True,[],0.36082162499951664,,source_selected,"[""web-01""]","[""web-01""]"
+before,fake,measured,2,healthy_web,1,web-01 CPU 급증 원인 진단해줘,True,0,0,False,"[""db-down""]",0.7165426660003504,,,"[""web-01""]","[""web-01""]"
+after,fake,measured,2,payments_cache,1,payments-service랑 cache-service 둘 다 저하됐는데 공통 원인을 진단해줘,True,2,2,True,[],0.7167642080003134,,source_selected,"[""payments-service"", ""cache-service""]","[""payments-service"", ""cache-service""]"
+before,fake,measured,2,payments_cache,1,payments-service랑 cache-service 둘 다 저하됐는데 공통 원인을 진단해줘,False,1,2,False,[],0.7149007500001971,,,"[""payments-service"", ""cache-service""]","[""payments-service"", ""cache-service"", ""web-01""]"
+after,fake,measured,2,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],0.7148488329994507,,source_selected,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+before,fake,measured,2,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],0.7170240830000694,,,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+after,fake,measured,2,one_service_two_types,1,payments-service CPU와 메모리 급증 진단해줘,True,2,2,True,[],0.7148359170005278,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,2,one_service_two_types,1,payments-service CPU와 메모리 급증 진단해줘,False,1,2,False,[],0.7169948330001716,,,"[""payments-service""]","[""payments-service"", ""web-01""]"
+after,fake,measured,2,unknown_service,1,billing-service 응답 지연 진단해줘,True,0,0,True,[],0.0031649590000597527,,,[],[]
+before,fake,measured,2,unknown_service,1,billing-service 응답 지연 진단해줘,False,0,0,False,"[""db-down""]",0.7166224169995985,,,[],"[""billing-service"", ""web-01""]"
+after,fake,measured,2,missing_target,1,응답 지연 원인 진단해줘,True,0,0,True,[],0.003012790999491699,,,[],[]
+before,fake,measured,2,missing_target,1,응답 지연 원인 진단해줘,False,0,0,False,"[""high-latency""]",0.7150070830002733,,,[],"[""auth-service"", ""web-01""]"
+after,fake,measured,2,clarify_followup,1,응답 지연 원인 진단해줘,True,0,0,True,[],0.003446458000325947,,,[],[]
+after,fake,measured,2,clarify_followup,2,payments-service,True,1,1,True,[],0.7151569999996354,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,2,clarify_followup,1,응답 지연 원인 진단해줘,False,0,0,False,"[""high-latency""]",0.7171147910003128,,,[],"[""auth-service"", ""web-01""]"
+before,fake,measured,2,clarify_followup,2,payments-service,False,0,1,False,[],0.0025631670005168417,,,"[""payments-service""]",[]
+after,fake,measured,2,greeting,1,"안녕, 너는 누구야?",True,0,0,True,[],0.0029148340008759988,,,[],[]
+before,fake,measured,2,greeting,1,"안녕, 너는 누구야?",True,0,0,True,[],0.0023954589996719733,,,[],[]
+after,fake,measured,2,mixed_unknown,1,payments-service와 billing-service 지연 진단해줘,True,0,0,True,[],0.003261291999478999,,,[],[]
+before,fake,measured,2,mixed_unknown,1,payments-service와 billing-service 지연 진단해줘,False,0,0,False,"[""cpu-spike""]",0.7172015420001117,,,[],"[""payments-service"", ""billing-service"", ""web-01""]"
+before,fake,measured,3,payments_cpu,1,payments-service CPU 급증 원인 진단해줘,False,1,1,True,[],0.716287583999474,,,"[""payments-service""]","[""payments-service"", ""web-01""]"
+after,fake,measured,3,payments_cpu,1,payments-service CPU 급증 원인 진단해줘,True,1,1,True,[],0.7163511250000738,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,3,cache_memory,1,cache-service 메모리 증가 장애 진단해줘,False,1,1,True,[],0.719165041999986,,,"[""cache-service""]","[""cache-service"", ""web-01""]"
+after,fake,measured,3,cache_memory,1,cache-service 메모리 증가 장애 진단해줘,True,1,1,True,[],0.7173757500004285,,source_selected,"[""cache-service""]","[""cache-service""]"
+before,fake,measured,3,log_disk,1,log-service 디스크 부족 장애 진단해줘,False,1,1,True,[],0.7099820829998862,,,"[""log-service""]","[""log-service"", ""web-01""]"
+after,fake,measured,3,log_disk,1,log-service 디스크 부족 장애 진단해줘,True,1,1,True,[],0.7087950409995756,,source_selected,"[""log-service""]","[""log-service""]"
+before,fake,measured,3,gateway_timeout,1,gateway-service 타임아웃 장애 진단해줘,False,1,1,True,[],0.7130468329996802,,,"[""gateway-service""]","[""gateway-service"", ""web-01""]"
+after,fake,measured,3,gateway_timeout,1,gateway-service 타임아웃 장애 진단해줘,True,1,1,True,[],0.7093621249996431,,source_selected,"[""gateway-service""]","[""gateway-service""]"
+before,fake,measured,3,auth_latency,1,auth-service 로그인 지연 진단해줘,False,1,1,True,[],0.7092218750003667,,,"[""auth-service""]","[""auth-service"", ""web-01""]"
+after,fake,measured,3,auth_latency,1,auth-service 로그인 지연 진단해줘,True,1,1,True,[],0.709060459000284,,source_selected,"[""auth-service""]","[""auth-service""]"
+before,fake,measured,3,healthy_web,1,web-01 CPU 급증 원인 진단해줘,True,0,0,False,"[""db-down""]",0.7184349999997721,,,"[""web-01""]","[""web-01""]"
+after,fake,measured,3,healthy_web,1,web-01 CPU 급증 원인 진단해줘,True,0,0,True,[],0.35846050000054674,,source_selected,"[""web-01""]","[""web-01""]"
+before,fake,measured,3,payments_cache,1,payments-service랑 cache-service 둘 다 저하됐는데 공통 원인을 진단해줘,False,1,2,False,[],0.7102428750004037,,,"[""payments-service"", ""cache-service""]","[""payments-service"", ""cache-service"", ""web-01""]"
+after,fake,measured,3,payments_cache,1,payments-service랑 cache-service 둘 다 저하됐는데 공통 원인을 진단해줘,True,2,2,True,[],0.7083668329996726,,source_selected,"[""payments-service"", ""cache-service""]","[""payments-service"", ""cache-service""]"
+before,fake,measured,3,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],0.7091621669997039,,,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+after,fake,measured,3,web_auth,1,"web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",True,1,1,True,[],0.7087210419995245,,source_selected,"[""web-01"", ""auth-service""]","[""web-01"", ""auth-service""]"
+before,fake,measured,3,one_service_two_types,1,payments-service CPU와 메모리 급증 진단해줘,False,1,2,False,[],0.7090558750005584,,,"[""payments-service""]","[""payments-service"", ""web-01""]"
+after,fake,measured,3,one_service_two_types,1,payments-service CPU와 메모리 급증 진단해줘,True,2,2,True,[],0.7092889580007977,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,3,unknown_service,1,billing-service 응답 지연 진단해줘,False,0,0,False,"[""db-down""]",0.7090275829996244,,,[],"[""billing-service"", ""web-01""]"
+after,fake,measured,3,unknown_service,1,billing-service 응답 지연 진단해줘,True,0,0,True,[],0.001864541999566427,,,[],[]
+before,fake,measured,3,missing_target,1,응답 지연 원인 진단해줘,False,0,0,False,"[""high-latency""]",0.7087293749991659,,,[],"[""auth-service"", ""web-01""]"
+after,fake,measured,3,missing_target,1,응답 지연 원인 진단해줘,True,0,0,True,[],0.0024375410002903664,,,[],[]
+before,fake,measured,3,clarify_followup,1,응답 지연 원인 진단해줘,False,0,0,False,"[""high-latency""]",0.7087825409998914,,,[],"[""auth-service"", ""web-01""]"
+before,fake,measured,3,clarify_followup,2,payments-service,False,0,1,False,[],0.0014417499996852712,,,"[""payments-service""]",[]
+after,fake,measured,3,clarify_followup,1,응답 지연 원인 진단해줘,True,0,0,True,[],0.0016621249997115228,,,[],[]
+after,fake,measured,3,clarify_followup,2,payments-service,True,1,1,True,[],0.7085238750005374,,source_selected,"[""payments-service""]","[""payments-service""]"
+before,fake,measured,3,greeting,1,"안녕, 너는 누구야?",True,0,0,True,[],0.0015512499994656537,,,[],[]
+after,fake,measured,3,greeting,1,"안녕, 너는 누구야?",True,0,0,True,[],0.0013054579994786764,,,[],[]
+before,fake,measured,3,mixed_unknown,1,payments-service와 billing-service 지연 진단해줘,False,0,0,False,"[""cpu-spike""]",0.7085661249993791,,,[],"[""payments-service"", ""billing-service"", ""web-01""]"
+after,fake,measured,3,mixed_unknown,1,payments-service와 billing-service 지연 진단해줘,True,0,0,True,[],0.0019640419995994307,,,[],[]
