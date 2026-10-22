@@ -1,0 +1,283 @@
+{
+  "schema_version": 1,
+  "description": "의미 검색 개발용 회귀 사례. 기존 영어 키워드와 90% 수치 규칙을 피한 알림 6종 및 모호한 알림 2종. 전체 운영 표현을 대표하지 않음.",
+  "monitoring": {
+    "auth-service": {
+      "system_name": "auth-service",
+      "status": "degraded",
+      "cpu_percent": 78.0,
+      "memory_percent": 61.0,
+      "alerts": [
+        "p95 latency 2.4s (threshold 1.0s)",
+        "connection pool 92% used"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "web-01": {
+      "system_name": "web-01",
+      "status": "healthy",
+      "cpu_percent": 34.0,
+      "memory_percent": 48.0,
+      "alerts": [],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "payments-service": {
+      "system_name": "payments-service",
+      "status": "degraded",
+      "cpu_percent": 91.0,
+      "memory_percent": 55.0,
+      "alerts": [
+        "CPU 91% (threshold 80%)",
+        "payments-service-3 instance responding slow"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "cache-service": {
+      "system_name": "cache-service",
+      "status": "degraded",
+      "cpu_percent": 42.0,
+      "memory_percent": 89.0,
+      "alerts": [
+        "memory usage climbing steadily over 6h",
+        "heap near limit"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "gateway-service": {
+      "system_name": "gateway-service",
+      "status": "degraded",
+      "cpu_percent": 30.0,
+      "memory_percent": 45.0,
+      "alerts": [
+        "upstream timeout to payments-service (504)",
+        "network packet loss 3%"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    },
+    "log-service": {
+      "system_name": "log-service",
+      "status": "degraded",
+      "cpu_percent": 20.0,
+      "memory_percent": 35.0,
+      "alerts": [
+        "disk usage 95% on /var/log",
+        "disk space low"
+      ],
+      "last_checked": "2026-10-21T00:00:00+09:00"
+    }
+  },
+  "cases": [
+    {
+      "id": "semantic_cpu",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 42.0,
+          "memory_percent": 45.0,
+          "alerts": [
+            "프로세서가 연산 요청에 계속 점유되어 다른 작업을 처리하지 못합니다"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "cpu-spike"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "semantic_memory",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 42.0,
+          "memory_percent": 45.0,
+          "alerts": [
+            "객체를 해제한 뒤에도 점유 공간이 반환되지 않고 계속 누적됩니다"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "memory-leak"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "semantic_disk",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 42.0,
+          "memory_percent": 45.0,
+          "alerts": [
+            "저장 장치에 남은 공간이 없어 파일 기록이 실패합니다"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "disk-full"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "semantic_latency",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 42.0,
+          "memory_percent": 45.0,
+          "alerts": [
+            "상위 5퍼센트 요청이 오래 걸리고 연결 자원이 거의 소진되었습니다"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "high-latency"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "semantic_network",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 42.0,
+          "memory_percent": 45.0,
+          "alerts": [
+            "이름 해석이 실패하고 방화벽 변경 후 다른 서버로 연결되지 않습니다"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "network-timeout"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "semantic_db",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 42.0,
+          "memory_percent": 45.0,
+          "alerts": [
+            "데이터베이스 연결이 모두 끊겨 이중화 대기 노드 전환이 필요합니다"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": [
+            "db-down"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ambiguous_owner",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 42.0,
+          "memory_percent": 45.0,
+          "alerts": [
+            "담당자 확인이 필요합니다"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": []
+        }
+      ]
+    },
+    {
+      "id": "ambiguous_issue",
+      "monitoring_overrides": {
+        "payments-service": {
+          "system_name": "payments-service",
+          "status": "degraded",
+          "cpu_percent": 42.0,
+          "memory_percent": 45.0,
+          "alerts": [
+            "일시적인 문제가 발생했습니다"
+          ],
+          "last_checked": "2026-10-21T00:00:00+09:00"
+        }
+      },
+      "turns": [
+        {
+          "query": "payments-service 장애 진단해줘",
+          "expected_route": "incident",
+          "expected_targets": [
+            "payments-service"
+          ],
+          "expected_runbooks": []
+        }
+      ]
+    }
+  ]
+}

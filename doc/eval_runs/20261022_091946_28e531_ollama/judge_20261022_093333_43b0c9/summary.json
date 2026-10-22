@@ -1,0 +1,63 @@
+{
+  "manifest": {
+    "status": "complete",
+    "model": "qwen3:8b",
+    "prompt_version": "grounded-ops-judge-v3",
+    "source": "/Users/hyobin/workspace/ai_mini_project/doc/eval_runs/20261022_091946_28e531_ollama/raw_results.jsonl",
+    "source_sha256": "7aa82f41c249c8f4c1e1153fed2f64ac350902e2785c136cc3bab67a48bf073e",
+    "case_ids": [
+      "payments_cache"
+    ],
+    "repeats": 1,
+    "generation_backend": "ollama",
+    "model_digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41"
+  },
+  "summary": {
+    "after": {
+      "valid": 3,
+      "errors": 0,
+      "skipped": 0,
+      "criteria": {
+        "numbers": {
+          "mean": 2,
+          "n": 3
+        },
+        "conditions": {
+          "mean": 2,
+          "n": 3
+        },
+        "uncertainty": {
+          "mean": 2,
+          "n": 3
+        },
+        "scope": {
+          "mean": 2,
+          "n": 3
+        }
+      }
+    },
+    "before": {
+      "valid": 3,
+      "errors": 0,
+      "skipped": 0,
+      "criteria": {
+        "numbers": {
+          "mean": 2,
+          "n": 3
+        },
+        "conditions": {
+          "mean": 2,
+          "n": 3
+        },
+        "uncertainty": {
+          "mean": 2,
+          "n": 3
+        },
+        "scope": {
+          "mean": 2,
+          "n": 3
+        }
+      }
+    }
+  }
+}

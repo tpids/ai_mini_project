@@ -8,6 +8,7 @@
 - Wave 14 : SUPERVISOR_VERSION(v1/v2) 환경변수로 legacy/신형 파이프라인 즉시 전환
 - LangSmith: 요청당 chat_request 루트 run 아래로 노드·LLM·MCP 호출이 계층 기록됨
 """
+import asyncio
 import json
 import os
 from contextlib import asynccontextmanager
@@ -16,12 +17,13 @@ from dotenv import load_dotenv
 
 load_dotenv()   # LANGCHAIN_TRACING_V2 / API_KEY / PROJECT — import보다 먼저
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from langsmith import traceable
 from langsmith.run_helpers import get_current_run_tree
 from pydantic import BaseModel
 
+from agent.chat_evaluations import ChatEvaluationStore
 from agent.deps import SupervisorDeps
 from agent.fake_llm import FastLLM, QualityLLM
 from agent.graph import build_graph
@@ -74,6 +76,11 @@ async def lifespan(app: FastAPI):
         session_store=SqliteSessionStore(),
         version=os.environ.get("SUPERVISOR_VERSION", "v2"),
     )
+    if os.getenv("RAG_ENABLED", "1" if backend == "ollama" else "0").lower() in {"1", "true", "yes"}:
+        from agent.retrieval import build_retriever
+        deps.runbook_retriever = build_retriever()
+    app.state.chat_evaluations = ChatEvaluationStore()
+    app.state.judge_lock = asyncio.Lock()
     app.state.deps = deps
     app.state.graph = build_graph(deps) if deps.version == "v2" else None
     app.state.instance_id = id(deps)
@@ -97,7 +104,8 @@ async def health():
             "supervisor_version": app.state.deps.version,
             "llm_backend": app.state.llm_backend,
             "fast_llm": app.state.deps.fast_llm.name,
-            "quality_llm": app.state.deps.quality_llm.name}
+            "quality_llm": app.state.deps.quality_llm.name,
+            "rag_enabled": app.state.deps.runbook_retriever is not None}
 
 
 @app.get("/version")
@@ -107,6 +115,8 @@ async def version():
 
 def _metadata(result: dict, run_id: str | None) -> dict:
     return {
+        "evaluation_id": result.get("evaluation_id"),
+        "evaluation_error": result.get("evaluation_error"),
         "route": result.get("route"),
         "task_count": len(result.get("tasks", [])),
         "gate_removed": result.get("gate_removed", 0),
@@ -123,6 +133,40 @@ def _metadata(result: dict, run_id: str | None) -> dict:
     }
 
 
+def _capture_for_evaluation(message, result):
+    try:
+        result["evaluation_id"] = app.state.chat_evaluations.capture(message, result, {
+            "backend": app.state.llm_backend, "fast": app.state.deps.fast_llm.name,
+            "quality": app.state.deps.quality_llm.name})
+    except (OSError, ValueError, TypeError) as exc:
+        result["evaluation_id"] = None
+        result["evaluation_error"] = "평가용 수집 근거를 저장하지 못했습니다: " + type(exc).__name__
+    return result
+
+
+def _build_judge():
+    from eval.judge import OllamaJudge
+    return OllamaJudge(os.getenv("JUDGE_MODEL", "qwen3:8b"))
+
+
+@app.post("/evaluations/{snapshot_id}/judge")
+async def judge_chat_answer(snapshot_id: str):
+    try:
+        snapshot = app.state.chat_evaluations.load(snapshot_id)
+    except FileNotFoundError:
+        raise HTTPException(404, "이 답변의 수집 근거가 없습니다. 질문을 다시 보내주세요.")
+    except (ValueError, KeyError):
+        raise HTTPException(400, "답변 ID 또는 저장된 근거를 확인할 수 없습니다.")
+    async with app.state.judge_lock:
+        judgment = await asyncio.to_thread(_build_judge().evaluate, snapshot["query"],
+                                           snapshot["collected"], snapshot["reply"])
+        try:
+            record = app.state.chat_evaluations.save_judgment(snapshot, judgment)
+        except OSError:
+            raise HTTPException(500, "평가 결과를 저장하지 못했습니다.")
+    return record
+
+
 @traceable(name="chat_request")
 async def _handle_chat(message: str, thread_id: str) -> tuple[dict, str | None]:
     deps = app.state.deps
@@ -135,6 +179,7 @@ async def _handle_chat(message: str, thread_id: str) -> tuple[dict, str | None]:
         result = await run_v1(deps, message, thread_id, history)   # Wave 14
     deps.session_store.append(thread_id, "user", message)
     deps.session_store.append(thread_id, "assistant", result["final"])
+    _capture_for_evaluation(message, result)
     rt = get_current_run_tree()
     return result, (str(rt.id) if rt else None)
 
@@ -165,6 +210,7 @@ async def chat_stream(message: str, thread_id: str = "default"):
         else:
             seen = 0
             final = ""
+            evaluation_state = {"query": message}
             last_prompt = None   # finalize까지 살아남은 최종 write/chat 호출의 실제 프롬프트
             # "updates"는 노드 상태, "custom"은 일반 대화의 AnswerToken이다.
             # 진단 초안은 검증 후 FinalAnswer로만 공개한다.
@@ -175,6 +221,8 @@ async def chat_stream(message: str, thread_id: str = "default"):
                     yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
                     continue
                 for node_name, delta in payload.items():
+                    evaluation_state.update({k: v for k, v in delta.items() if k in {
+                        "query", "collected", "report_mode", "report_step_ids"}})
                     for ev in (delta.get("events") or [])[seen:]:
                         ev = {**ev, "node": node_name}
                         yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
@@ -184,7 +232,12 @@ async def chat_stream(message: str, thread_id: str = "default"):
                         final = delta["final"]
                     if delta.get("last_prompt"):
                         last_prompt = delta["last_prompt"]
-            yield f"data: {json.dumps({'type': 'FinalAnswer', 'reply': final, 'prompt': last_prompt}, ensure_ascii=False)}\n\n"
+            evaluation_state["final"] = final
+            _capture_for_evaluation(message, evaluation_state)
+            final_event = {"type": "FinalAnswer", "reply": final, "prompt": last_prompt,
+                           "evaluation_id": evaluation_state.get("evaluation_id"),
+                           "evaluation_error": evaluation_state.get("evaluation_error")}
+            yield f"data: {json.dumps(final_event, ensure_ascii=False)}\n\n"
             deps.session_store.append(thread_id, "user", message)
             deps.session_store.append(thread_id, "assistant", final)
         yield "data: [DONE]\n\n"

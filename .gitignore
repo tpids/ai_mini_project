@@ -23,3 +23,8 @@ session.db-*
 
 # macOS metadata
 .DS_Store
+# Rebuildable local RAG vector index
+.cache/
+
+# Generated RAG vectors in evaluation runs
+doc/eval_runs/**/runbooks.sqlite3*

@@ -33,7 +33,11 @@ def summarize(records: list[dict]) -> dict:
     manual_total = sum(t["score"]["manual_required"] for t in turns)
     latencies = [t["elapsed_seconds"] for t in turns
                  if not t["score"]["error"] and t.get("elapsed_seconds") is not None]
+    retrieval_events = [e for t in turns for e in t.get("events", []) if e.get("type") == "RunbookRetrieved"]
     return {
+        "rag_searches": sum(e.get("method") in {"rag_with_rule_coverage", "rag_semantic", "rag_abstained"} for e in retrieval_events),
+        "rag_fallbacks": sum(e.get("method") == "rule_fallback" for e in retrieval_events),
+        "rag_semantic_matches": sum(e.get("method") == "rag_semantic" for e in retrieval_events),
         "case_runs": len(measured), "turns": denominator,
         "target_correct": target_hits,
         "target_accuracy": target_hits / denominator if denominator else None,

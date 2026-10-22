@@ -1,0 +1,210 @@
+{
+  "manifest": {
+    "schema_version": 1,
+    "run_id": "20261022_091946_28e531",
+    "backend": "ollama",
+    "status": "complete",
+    "data_backend": "fixed_fixture_adapter",
+    "dataset_sha256": "1b948cf9df09a612d6503db057cb906bacaa54eb63c5a2f2f1619186361a282e",
+    "case_ids": [
+      "payments_cache",
+      "web_auth"
+    ],
+    "repeats": 3,
+    "warmups": 1,
+    "timeout_seconds": 180.0,
+    "variants": {
+      "before": {
+        "revision": "68ddee43678bfab26d0f98668ce282ea1f04de9b",
+        "requested_ref": "68ddee4",
+        "source": "git_snapshot",
+        "retrieval": "rules",
+        "fingerprint": {
+          "sha256": "3f2ed56f1185d16b4f2b2ec053db1b78cd22b75c4aa2eae28720ee3f6460b67f",
+          "files": {
+            "agent/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "agent/deps.py": "05e2a41c5a4af655e2544292c015047bd9447d7d47bd2f067515f50042ad4d69",
+            "agent/fake_llm.py": "dc23caf418727e611616fc9669e68ebb8bcb3a83b5cfbd87ec54742be62df85b",
+            "agent/graph.py": "469832ea42b546d37408ba4822a0e639e98998498a14e4fbefddd1cb48ad31f8",
+            "agent/incident_rules.py": "2806e45479b399c837a54b1c5dca01fbc77b0040a84b48d76ca1da4fb9689e5b",
+            "agent/mcp_client.py": "eadff6c7bf2c5c69834b78d064b4a059934cc8aac14253da578edbf8e0b27542",
+            "agent/ollama_llm.py": "c1c265d4c5285e6a1fd2e06769351333a08c5a5340e6679bf23bea4722be5cde",
+            "agent/openai_llm.py": "1ace9bf745cc31dc318d3b4aa8655f7b111e0bed907346f115cb0a6facbaec93",
+            "agent/reporting.py": "661b8a182116b3bc2c7934bab20b3c35722079c4f0ed4365d0e88d9d23153ac5",
+            "agent/retry.py": "d2524552348c9faa08b5ce446434bf593677c7028fb38c9e11b03de8839d2a3a",
+            "agent/session_store.py": "cd1f61396ccd815d940be5a3d8929199648273c360c82fbd722163644b7356a6",
+            "agent/supervisor_v1.py": "6080b4b8c3a6bd56c617a560a64d644d5f1e5e2721ad65324a09886a2df6cab8",
+            "agent/targets.py": "89cd5c692c7b251f0ba95ba814c9d13416da46ce49c26cce844c811176449eab",
+            "data/monitoring.json": "44cf849b6ea4c64bb2ff6911fd99add291cc7a7bb94f56dc1ce562e527be8224",
+            "data/runbooks/cpu-spike.md": "30796f7b5c1d0bc09acfb2518b240e3a07b04136e84fe41397802a3bf2bff22d",
+            "data/runbooks/db-down.md": "a2d4f4d3bc89984348976e9012518ceba32f389a35bf5ee7da4c19f7e1de9be5",
+            "data/runbooks/disk-full.md": "72b9d4f006490887ccba981531129e5a42c0d7b8c789208db391fdc5acc566c7",
+            "data/runbooks/high-latency.md": "0df4846e66993b0b9312327a3f51fe6de663d701c64c2c7c10a9e2c35e9e63a3",
+            "data/runbooks/memory-leak.md": "085f00e9bba5effbb54e97a82d5f0b7032e027dac29816021729932a5e9a9ee1",
+            "data/runbooks/network-timeout.md": "ed68d1bc775138e7e66cfb50698949856bf27d5e11afefff6e5826223e063596"
+          }
+        },
+        "models": {
+          "ready": true,
+          "fast_model": "ollama:qwen3:0.6b",
+          "quality_model": "ollama:qwen3:8b"
+        }
+      },
+      "after": {
+        "revision": "68ddee43678bfab26d0f98668ce282ea1f04de9b",
+        "source": "working_tree",
+        "retrieval": "rag",
+        "source_changes": " M agent/deps.py\n M agent/graph.py\n M agent/reporting.py\n?? agent/retrieval.py\n",
+        "fingerprint": {
+          "sha256": "cb01db0947528cecf8849cecdd4da8df2b445ec2f4f0171b48e7a33d19ecb6c8",
+          "files": {
+            "agent/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "agent/deps.py": "96cc06b28266b760596180a847292ebccbd0080058b056786f3b98c624844e64",
+            "agent/fake_llm.py": "dc23caf418727e611616fc9669e68ebb8bcb3a83b5cfbd87ec54742be62df85b",
+            "agent/graph.py": "9feda3a1e61068ebf97b26d34d94934773f194acc7023d495309383f7ee3047c",
+            "agent/incident_rules.py": "2806e45479b399c837a54b1c5dca01fbc77b0040a84b48d76ca1da4fb9689e5b",
+            "agent/mcp_client.py": "eadff6c7bf2c5c69834b78d064b4a059934cc8aac14253da578edbf8e0b27542",
+            "agent/ollama_llm.py": "c1c265d4c5285e6a1fd2e06769351333a08c5a5340e6679bf23bea4722be5cde",
+            "agent/openai_llm.py": "1ace9bf745cc31dc318d3b4aa8655f7b111e0bed907346f115cb0a6facbaec93",
+            "agent/reporting.py": "51e670ddcc68eb6034ae12cb8bccee3bb2c7597159e94fb2a5107830ff61f3e9",
+            "agent/retrieval.py": "7f1c2577fa1c843eeddcf60bab2a348ed2f7bafb33c63b33d18f27fab6896778",
+            "agent/retry.py": "d2524552348c9faa08b5ce446434bf593677c7028fb38c9e11b03de8839d2a3a",
+            "agent/session_store.py": "cd1f61396ccd815d940be5a3d8929199648273c360c82fbd722163644b7356a6",
+            "agent/supervisor_v1.py": "6080b4b8c3a6bd56c617a560a64d644d5f1e5e2721ad65324a09886a2df6cab8",
+            "agent/targets.py": "89cd5c692c7b251f0ba95ba814c9d13416da46ce49c26cce844c811176449eab",
+            "data/monitoring.json": "44cf849b6ea4c64bb2ff6911fd99add291cc7a7bb94f56dc1ce562e527be8224",
+            "data/runbooks/cpu-spike.md": "30796f7b5c1d0bc09acfb2518b240e3a07b04136e84fe41397802a3bf2bff22d",
+            "data/runbooks/db-down.md": "a2d4f4d3bc89984348976e9012518ceba32f389a35bf5ee7da4c19f7e1de9be5",
+            "data/runbooks/disk-full.md": "72b9d4f006490887ccba981531129e5a42c0d7b8c789208db391fdc5acc566c7",
+            "data/runbooks/high-latency.md": "0df4846e66993b0b9312327a3f51fe6de663d701c64c2c7c10a9e2c35e9e63a3",
+            "data/runbooks/memory-leak.md": "085f00e9bba5effbb54e97a82d5f0b7032e027dac29816021729932a5e9a9ee1",
+            "data/runbooks/network-timeout.md": "ed68d1bc775138e7e66cfb50698949856bf27d5e11afefff6e5826223e063596"
+          }
+        },
+        "models": {
+          "ready": true,
+          "fast_model": "ollama:qwen3:0.6b",
+          "quality_model": "ollama:qwen3:8b"
+        }
+      }
+    },
+    "python": "3.11.15",
+    "timing": "graph invocation per turn; successful turns only; excludes startup and warmups"
+  },
+  "summary": {
+    "before": {
+      "rag_searches": 0,
+      "rag_fallbacks": 0,
+      "rag_semantic_matches": 0,
+      "case_runs": 6,
+      "turns": 6,
+      "target_correct": 6,
+      "target_accuracy": 1.0,
+      "manual_hits": 9,
+      "manual_required": 9,
+      "manual_recall": 1.0,
+      "manual_exact_turns": 6,
+      "unexpected_manual_count": 0,
+      "latency_median_seconds": 37.95482539649993,
+      "latency_samples": 6,
+      "error_turns": 0,
+      "fallback_turns": 0
+    },
+    "after": {
+      "rag_searches": 9,
+      "rag_fallbacks": 0,
+      "rag_semantic_matches": 0,
+      "case_runs": 6,
+      "turns": 6,
+      "target_correct": 6,
+      "target_accuracy": 1.0,
+      "manual_hits": 9,
+      "manual_required": 9,
+      "manual_recall": 1.0,
+      "manual_exact_turns": 6,
+      "unexpected_manual_count": 0,
+      "latency_median_seconds": 38.1143273539999,
+      "latency_samples": 6,
+      "error_turns": 0,
+      "fallback_turns": 0
+    }
+  },
+  "per_case": {
+    "before": {
+      "payments_cache": {
+        "rag_searches": 0,
+        "rag_fallbacks": 0,
+        "rag_semantic_matches": 0,
+        "case_runs": 3,
+        "turns": 3,
+        "target_correct": 3,
+        "target_accuracy": 1.0,
+        "manual_hits": 6,
+        "manual_required": 6,
+        "manual_recall": 1.0,
+        "manual_exact_turns": 3,
+        "unexpected_manual_count": 0,
+        "latency_median_seconds": 49.132920457999944,
+        "latency_samples": 3,
+        "error_turns": 0,
+        "fallback_turns": 0
+      },
+      "web_auth": {
+        "rag_searches": 0,
+        "rag_fallbacks": 0,
+        "rag_semantic_matches": 0,
+        "case_runs": 3,
+        "turns": 3,
+        "target_correct": 3,
+        "target_accuracy": 1.0,
+        "manual_hits": 3,
+        "manual_required": 3,
+        "manual_recall": 1.0,
+        "manual_exact_turns": 3,
+        "unexpected_manual_count": 0,
+        "latency_median_seconds": 26.8595705419998,
+        "latency_samples": 3,
+        "error_turns": 0,
+        "fallback_turns": 0
+      }
+    },
+    "after": {
+      "payments_cache": {
+        "rag_searches": 6,
+        "rag_fallbacks": 0,
+        "rag_semantic_matches": 0,
+        "case_runs": 3,
+        "turns": 3,
+        "target_correct": 3,
+        "target_accuracy": 1.0,
+        "manual_hits": 6,
+        "manual_required": 6,
+        "manual_recall": 1.0,
+        "manual_exact_turns": 3,
+        "unexpected_manual_count": 0,
+        "latency_median_seconds": 49.58924704099991,
+        "latency_samples": 3,
+        "error_turns": 0,
+        "fallback_turns": 0
+      },
+      "web_auth": {
+        "rag_searches": 3,
+        "rag_fallbacks": 0,
+        "rag_semantic_matches": 0,
+        "case_runs": 3,
+        "turns": 3,
+        "target_correct": 3,
+        "target_accuracy": 1.0,
+        "manual_hits": 3,
+        "manual_required": 3,
+        "manual_recall": 1.0,
+        "manual_exact_turns": 3,
+        "unexpected_manual_count": 0,
+        "latency_median_seconds": 27.385849750000034,
+        "latency_samples": 3,
+        "error_turns": 0,
+        "fallback_turns": 0
+      }
+    }
+  }
+}

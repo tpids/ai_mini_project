@@ -46,6 +46,16 @@ async def proxy_chat(req: Request):
     return JSONResponse(r.json(), status_code=r.status_code)
 
 
+@app.post("/evaluations/{snapshot_id}/judge")
+async def proxy_judge(snapshot_id: str):
+    async with httpx.AsyncClient(timeout=180.0) as client:
+        try:
+            response = await client.post(f"{BACKEND}/evaluations/{snapshot_id}/judge")
+        except httpx.HTTPError:
+            return JSONResponse({"detail": "평가 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요."}, status_code=503)
+    return JSONResponse(response.json(), status_code=response.status_code)
+
+
 @app.get("/chat/stream")
 async def proxy_stream(message: str, thread_id: str = "web-demo"):
     async def relay():

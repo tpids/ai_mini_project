@@ -58,7 +58,7 @@ done
 
 # ── 2) 이전 실행 정리 ──────────────────────────────────────────────────
 lsof -ti:8100 | xargs kill -9 2>/dev/null || true
-rm -f session.db
+# 대화 기록은 재시작해도 보존한다.
 
 cleanup() {
     echo

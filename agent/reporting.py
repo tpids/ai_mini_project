@@ -52,6 +52,7 @@ def valid_selection(selected, collected: list[dict]) -> bool:
 def observation_lines(collected: list[dict]) -> list[str]:
     lines = []
     notes = {a["data"]["system_name"]: a["data"]["note"] for a in assess_services(collected)}
+    notes.update({a["data"]["system_name"]: a["data"]["note"] for a in collected if a["source"] == "assessment"})
     for item in collected:
         if item["source"] != "monitoring":
             continue

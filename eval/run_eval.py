@@ -58,7 +58,9 @@ class Worker:
         self.log = log_path.open("a")
         self.process = subprocess.Popen(
             [sys.executable, "-m", "eval.worker", "--source-root", str(source_root),
-             "--backend", args.backend, "--fast-model", args.fast_model, "--quality-model", args.quality_model],
+             "--backend", args.backend, "--fast-model", args.fast_model, "--quality-model", args.quality_model,
+             "--retrieval", (args.retrieval if source_root == ROOT else "rules"),
+             "--rag-db", str(log_path.parent / "runbooks.sqlite3")],
             cwd=ROOT, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=self.log,
             text=True, bufsize=1)
         def read():
@@ -160,6 +162,7 @@ def write_results(output, manifest, records):
                                  "actual_targets": json.dumps(turn.get("monitoring_targets", []))})
     lines = ["# 고정 입력 반복 평가", "", f"- 실행 상태: **{manifest.get('status', 'unknown')}**",
              f"- 모델 모드: **{manifest['backend']}**",
+             "- 검색 방식: " + ", ".join(f"{v}={meta.get('retrieval', 'rules')}" for v, meta in manifest["variants"].items()),
              f"- 사례 {len(manifest['case_ids'])}개, 사례별 측정 {manifest['repeats']}회, 워밍업 {manifest['warmups']}회 제외",
              "- 데이터: 고정 fixture MCP 어댑터. 실제 모니터링 서버·MCP 전송 시간은 포함하지 않음",
              "- 순서: 반복마다 이전/현재 코드의 실행 순서를 번갈아 적용", "",
@@ -169,6 +172,11 @@ def write_results(output, manifest, records):
         latency = f"{stat['latency_median_seconds']:.3f}초 (n={stat['latency_samples']})" if stat['latency_median_seconds'] is not None else "N/A"
         lines.append(f"| {variant} | {format_rate(stat['target_accuracy'], stat['target_correct'], stat['turns'])} | "
                      f"{format_rate(stat['manual_recall'], stat['manual_hits'], stat['manual_required'])} | {latency} | {stat['error_turns']} |")
+    if any(meta.get("retrieval") == "rag" for meta in manifest["variants"].values()):
+        lines += ["", "## 실제 임베딩 검색 실행 기록", ""]
+        for variant, stat in stats.items():
+            lines.append(f"- {variant}: 검색 {stat['rag_searches']}회, 규칙으로 대체 {stat['rag_fallbacks']}회, 규칙 밖 의미 매칭 {stat['rag_semantic_matches']}회")
+        lines.append("- rag는 실제 Ollama 임베딩을 사용. 검색 실패로 기존 규칙을 쓴 경우를 구분하여 기록.")
     lines += ["", "## 계산 방법과 해석 범위", "",
               "- 대상 선택: 기대 route와 실제 모니터링 대상 집합이 모두 일치해야 정답. 확인 요청 사례는 지정한 안내 문구도 확인.",
               "- 매뉴얼 조회 재현율: 기대 유형 중 성공적으로 읽은 유형 수 / 기대 유형 수. 답변 품질이나 서비스별 권고 연결률을 뜻하지 않음.",
@@ -179,13 +187,14 @@ def write_results(output, manifest, records):
               "- 고정 데이터와 현재 모델을 사용한 제한된 회귀 평가. 운영 장애 전체의 정확도나 실제 서비스 지연으로 일반화하지 않음.",
               "- 원문 검증을 답변 전체의 의미적 정확도 점수나 LLM-as-judge 평가로 바꾸어 부르지 않음."]
     if manifest["backend"] == "fake":
-        lines += ["", "**fake 결과는 모의 모델의 결정론적 흐름 검증이며 실제 LLM 성능이나 응답 시간 비교 자료가 아닙니다.**"]
+        lines += ["", "**fake는 생성·계획 모의 모델의 흐름 검증입니다. rag 선택 시 검색 임베딩은 실제 모델이지만, 실제 생성 LLM 성능·응답 시간으로 해석하지 않습니다.**"]
     (output / "report.md").write_text("\n".join(lines) + "\n")
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="고정 입력으로 이전/현재 그래프의 평가 지표 비교")
     parser.add_argument("--backend", choices=["fake", "ollama"], default="fake")
+    parser.add_argument("--retrieval", choices=["rules", "rag"], default="rules", help="현재 코드의 매뉴얼 검색 방식. baseline은 기존 규칙 유지")
     parser.add_argument("--baseline-ref", help="비교할 Git commit/ref. 생략하면 현재 코드만 평가")
     parser.add_argument("--dataset", type=Path, default=ROOT / "eval/cases.json")
     parser.add_argument("--case", action="append", default=[], help="평가할 case ID. 여러 번 지정 가능")
@@ -211,9 +220,9 @@ def main(argv=None):
             revision = export_baseline(args.baseline_ref, source)
             sources["before"] = source
             variants["before"] = {"revision": revision, "requested_ref": args.baseline_ref,
-                                  "source": "git_snapshot", "fingerprint": fingerprint(source)}
+                                  "source": "git_snapshot", "retrieval": "rules", "fingerprint": fingerprint(source)}
         sources["after"] = ROOT
-        variants["after"] = {"revision": git("rev-parse", "HEAD").decode().strip(), "source": "working_tree",
+        variants["after"] = {"revision": git("rev-parse", "HEAD").decode().strip(), "source": "working_tree", "retrieval": args.retrieval,
                              "source_changes": git("status", "--porcelain", "--", "agent", "data").decode(),
                              "fingerprint": fingerprint(ROOT)}
         manifest = {"schema_version": 1, "run_id": run_id, "backend": args.backend, "status": "running",

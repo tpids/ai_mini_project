@@ -1,0 +1,242 @@
+{
+  "description": "실제 qwen3:8b 평가자 검증. 원문 보존 보고서와 수치 변경·조건 삭제/허위 실행 답변 비교. 프롬프트 v2.",
+  "results": [
+    {
+      "case_id": "grounded",
+      "query": "payments-service CPU 급증 원인 진단해줘",
+      "collected": [
+        {
+          "source": "monitoring",
+          "data": {
+            "system_name": "payments-service",
+            "status": "degraded",
+            "cpu_percent": 95.0,
+            "memory_percent": 56.0,
+            "alerts": [
+              "CPU 91% (threshold 80%)"
+            ]
+          }
+        },
+        {
+          "source": "runbook",
+          "system_name": "payments-service",
+          "incident_type": "cpu-spike",
+          "data": "# Runbook: CPU 급증 대응 절차\n\n1. get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n2. 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n3. CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.\n4. 급증이 특정 배포 직후 시작됐다면 직전 배포를 롤백하고 원인 분석은 별도로 진행한다.\n5. 정상화 후 프로파일링 결과를 바탕으로 핫스팟 코드를 식별해 최적화 작업을 등록한다.\n"
+        },
+        {
+          "source": "assessment",
+          "data": {
+            "system_name": "payments-service",
+            "incident_types": [
+              "cpu-spike"
+            ],
+            "status": "matched",
+            "note": ""
+          }
+        }
+      ],
+      "answer": "1) 확인된 사실\n- payments-service: 상태=degraded, CPU 95.0%, 메모리 56.0%\n  알림 원문: [\"CPU 91% (threshold 80%)\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- 대상 서비스: payments-service\n  - [Runbook: CPU 급증 대응 절차 / 1번] get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 2번] 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 3번] CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.",
+      "judgment": {
+        "model": "qwen3:8b",
+        "prompt_version": "grounded-ops-judge-v2",
+        "prompt_sha256": "b4d46b337b3060652353c611bcb75d70856edb59fdcaeb2957fdb0d7c4884437",
+        "answer_sha256": "72646a9b63623ea7d1809e20477b46e84ce29f782102ad11a61f6726077ebdb1",
+        "applicable": [
+          "numbers",
+          "uncertainty",
+          "scope",
+          "conditions"
+        ],
+        "status": "ok",
+        "raw_output": "{\n  \"numbers\": {\n    \"score\": 2,\n    \"reason\": \"수치와 상태는 수집된 사실과 일치하며, 답변에서 수치를 변경하거나 생성하지 않았다.\",\n    \"line_id\": 2\n  },\n  \"conditions\": {\n    \"score\": 2,\n    \"reason\": \"매뉴얼의 임계값(90%)과 지속 시간은 수집된 사실과 구분하여 언급했으며, 조건 충족 여부를 검토하라고 명시했다.\",\n    \"line_id\": 10\n  },\n  \"uncertainty\": {\n    \"score\": 2,\n    \"reason\": \"불확실성을 인정하며, 근본 원인, 시계열, 지속 여부, 로그, 배포 이력 등을 확인하지 않았다고 명시했다.\",\n    \"line_id\": 6\n  },\n  \"scope\": {\n    \"score\": 2,\n    \"reason\": \"대상 서비스는 payments-service로 명확히 지정했고, 필요한 매뉴얼과 조치 절차를 모두 포함했다.\",\n    \"line_id\": 11\n  }\n}",
+        "tokens": 1759,
+        "criteria": {
+          "numbers": {
+            "score": 2,
+            "reason": "수치와 상태는 수집된 사실과 일치하며, 답변에서 수치를 변경하거나 생성하지 않았다.",
+            "line_id": 2,
+            "quote": "- payments-service: 상태=degraded, CPU 95.0%, 메모리 56.0%"
+          },
+          "conditions": {
+            "score": 2,
+            "reason": "매뉴얼의 임계값(90%)과 지속 시간은 수집된 사실과 구분하여 언급했으며, 조건 충족 여부를 검토하라고 명시했다.",
+            "line_id": 10,
+            "quote": "- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다."
+          },
+          "uncertainty": {
+            "score": 2,
+            "reason": "불확실성을 인정하며, 근본 원인, 시계열, 지속 여부, 로그, 배포 이력 등을 확인하지 않았다고 명시했다.",
+            "line_id": 6,
+            "quote": "- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다."
+          },
+          "scope": {
+            "score": 2,
+            "reason": "대상 서비스는 payments-service로 명확히 지정했고, 필요한 매뉴얼과 조치 절차를 모두 포함했다.",
+            "line_id": 11,
+            "quote": "- 대상 서비스: payments-service"
+          }
+        },
+        "judge_elapsed_seconds": 15.934255249999978
+      }
+    },
+    {
+      "case_id": "wrong_number",
+      "query": "payments-service CPU 급증 원인 진단해줘",
+      "collected": [
+        {
+          "source": "monitoring",
+          "data": {
+            "system_name": "payments-service",
+            "status": "degraded",
+            "cpu_percent": 95.0,
+            "memory_percent": 56.0,
+            "alerts": [
+              "CPU 91% (threshold 80%)"
+            ]
+          }
+        },
+        {
+          "source": "runbook",
+          "system_name": "payments-service",
+          "incident_type": "cpu-spike",
+          "data": "# Runbook: CPU 급증 대응 절차\n\n1. get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n2. 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n3. CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.\n4. 급증이 특정 배포 직후 시작됐다면 직전 배포를 롤백하고 원인 분석은 별도로 진행한다.\n5. 정상화 후 프로파일링 결과를 바탕으로 핫스팟 코드를 식별해 최적화 작업을 등록한다.\n"
+        },
+        {
+          "source": "assessment",
+          "data": {
+            "system_name": "payments-service",
+            "incident_types": [
+              "cpu-spike"
+            ],
+            "status": "matched",
+            "note": ""
+          }
+        }
+      ],
+      "answer": "1) 확인된 사실\n- payments-service: 상태=degraded, CPU 12.0%, 메모리 56.0%\n  알림 원문: [\"CPU 91% (threshold 80%)\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- 대상 서비스: payments-service\n  - [Runbook: CPU 급증 대응 절차 / 1번] get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 2번] 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 3번] CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.",
+      "judgment": {
+        "model": "qwen3:8b",
+        "prompt_version": "grounded-ops-judge-v2",
+        "prompt_sha256": "7a7da3d348e6bf2f1dc8d6ba02472b20ae0e4311cef2df8b8ac7a7e4b3506112",
+        "answer_sha256": "1c6726d7464daa6aa9e903cfcafa60697ff5bcb6df6a43ae6f5f9642bdf30acf",
+        "applicable": [
+          "numbers",
+          "uncertainty",
+          "scope",
+          "conditions"
+        ],
+        "status": "ok",
+        "raw_output": "{\n  \"numbers\": {\n    \"score\": 0,\n    \"reason\": \"수집된 CPU 값은 95%이지만 답변의 현재 CPU 값은 12%로 수치가 잘못 기재되어 있음\",\n    \"line_id\": 2\n  },\n  \"conditions\": {\n    \"score\": 2,\n    \"reason\": \"매뉴얼의 임계값(90%)과 지속 시간은 답변에서 언급되지 않아 조건 보존이 이루어지지 않음\",\n    \"line_id\": 10\n  },\n  \"uncertainty\": {\n    \"score\": 2,\n    \"reason\": \"불확실성 표현이 명확하고, 미수집 데이터에 대한 단정이 없음\",\n    \"line_id\": 6\n  },\n  \"scope\": {\n    \"score\": 2,\n    \"reason\": \"모든 관측값과 권고 대상이 정확하고, 서비스 및 매뉴얼을 빠뜨리지 않음\",\n    \"line_id\": 11\n  }\n}",
+        "tokens": 1741,
+        "criteria": {
+          "numbers": {
+            "score": 0,
+            "reason": "수집된 CPU 값은 95%이지만 답변의 현재 CPU 값은 12%로 수치가 잘못 기재되어 있음",
+            "line_id": 2,
+            "quote": "- payments-service: 상태=degraded, CPU 12.0%, 메모리 56.0%"
+          },
+          "conditions": {
+            "score": 2,
+            "reason": "매뉴얼의 임계값(90%)과 지속 시간은 답변에서 언급되지 않아 조건 보존이 이루어지지 않음",
+            "line_id": 10,
+            "quote": "- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다."
+          },
+          "uncertainty": {
+            "score": 2,
+            "reason": "불확실성 표현이 명확하고, 미수집 데이터에 대한 단정이 없음",
+            "line_id": 6,
+            "quote": "- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다."
+          },
+          "scope": {
+            "score": 2,
+            "reason": "모든 관측값과 권고 대상이 정확하고, 서비스 및 매뉴얼을 빠뜨리지 않음",
+            "line_id": 11,
+            "quote": "- 대상 서비스: payments-service"
+          }
+        },
+        "judge_elapsed_seconds": 13.509299291000161
+      }
+    },
+    {
+      "case_id": "removed_condition",
+      "query": "payments-service CPU 급증 원인 진단해줘",
+      "collected": [
+        {
+          "source": "monitoring",
+          "data": {
+            "system_name": "payments-service",
+            "status": "degraded",
+            "cpu_percent": 95.0,
+            "memory_percent": 56.0,
+            "alerts": [
+              "CPU 91% (threshold 80%)"
+            ]
+          }
+        },
+        {
+          "source": "runbook",
+          "system_name": "payments-service",
+          "incident_type": "cpu-spike",
+          "data": "# Runbook: CPU 급증 대응 절차\n\n1. get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n2. 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n3. CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.\n4. 급증이 특정 배포 직후 시작됐다면 직전 배포를 롤백하고 원인 분석은 별도로 진행한다.\n5. 정상화 후 프로파일링 결과를 바탕으로 핫스팟 코드를 식별해 최적화 작업을 등록한다.\n"
+        },
+        {
+          "source": "assessment",
+          "data": {
+            "system_name": "payments-service",
+            "incident_types": [
+              "cpu-spike"
+            ],
+            "status": "matched",
+            "note": ""
+          }
+        }
+      ],
+      "answer": "1) 확인된 사실\n- payments-service: 상태=degraded, CPU 95.0%, 메모리 56.0%\n  알림 원문: [\"CPU 91% (threshold 80%)\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- 대상 서비스: payments-service\n  - [Runbook: CPU 급증 대응 절차 / 1번] get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 2번] 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 3번] 인스턴스를 즉시 한 대 추가했다. 로그를 확인해 배포가 원인임을 확정했다.",
+      "judgment": {
+        "model": "qwen3:8b",
+        "prompt_version": "grounded-ops-judge-v2",
+        "prompt_sha256": "1768849e4c7e3cdfeb4a7865fafe6556cd4853456ceb3456309743a6546877c7",
+        "answer_sha256": "742e83d12d7bec28d496639ace03673ad6757389f764a3743670e0748d00b813",
+        "applicable": [
+          "numbers",
+          "uncertainty",
+          "scope",
+          "conditions"
+        ],
+        "status": "ok",
+        "raw_output": "{\n  \"numbers\": {\n    \"score\": 2,\n    \"reason\": \"수치와 상태는 수집된 사실과 일치하며, 답변에서 수치를 변경하거나 생성하지 않았다.\",\n    \"line_id\": 2\n  },\n  \"conditions\": {\n    \"score\": 1,\n    \"reason\": \"매뉴얼 3번 조건에 따르면 'CPU가 90%를 넘고 지속되면' 인스턴스를 추가해야 하지만, 답변은 '즉시 추가했다'고 명시해 조건 충족 여부를 판단하지 않고 조치를 실행했다고 표현함.\",\n    \"line_id\": 14\n  },\n  \"uncertainty\": {\n    \"score\": 2,\n    \"reason\": \"불확실성을 인정하며, 근본 원인, 배포 이력, 리전별 분포 등을 수집하지 않았다고 명시해 단정하지 않았다.\",\n    \"line_id\": 6\n  },\n  \"scope\": {\n    \"score\": 2,\n    \"reason\": \"모든 관측값과 권고 대상이 정확하며, 서비스와 매뉴얼을 빠뜨리지 않았다.\",\n    \"line_id\": 11\n  }\n}",
+        "tokens": 1766,
+        "criteria": {
+          "numbers": {
+            "score": 2,
+            "reason": "수치와 상태는 수집된 사실과 일치하며, 답변에서 수치를 변경하거나 생성하지 않았다.",
+            "line_id": 2,
+            "quote": "- payments-service: 상태=degraded, CPU 95.0%, 메모리 56.0%"
+          },
+          "conditions": {
+            "score": 1,
+            "reason": "매뉴얼 3번 조건에 따르면 'CPU가 90%를 넘고 지속되면' 인스턴스를 추가해야 하지만, 답변은 '즉시 추가했다'고 명시해 조건 충족 여부를 판단하지 않고 조치를 실행했다고 표현함.",
+            "line_id": 14,
+            "quote": "  - [Runbook: CPU 급증 대응 절차 / 3번] 인스턴스를 즉시 한 대 추가했다. 로그를 확인해 배포가 원인임을 확정했다."
+          },
+          "uncertainty": {
+            "score": 2,
+            "reason": "불확실성을 인정하며, 근본 원인, 배포 이력, 리전별 분포 등을 수집하지 않았다고 명시해 단정하지 않았다.",
+            "line_id": 6,
+            "quote": "- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다."
+          },
+          "scope": {
+            "score": 2,
+            "reason": "모든 관측값과 권고 대상이 정확하며, 서비스와 매뉴얼을 빠뜨리지 않았다.",
+            "line_id": 11,
+            "quote": "- 대상 서비스: payments-service"
+          }
+        },
+        "judge_elapsed_seconds": 15.561081416999968
+      }
+    }
+  ],
+  "limitations": [
+    "조건 삭제/허위 실행 사례의 conditions 점수는 1로 낮아졌지만, uncertainty 점수는 2로 유지되어 허위 단정을 놓쳤다. LLM 점수를 승인 게이트로 사용하지 않는다."
+  ]
+}

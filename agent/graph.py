@@ -243,6 +243,29 @@ async def replan_check_node(state: AgentState, deps: SupervisorDeps) -> dict:
     """서비스·장애 유형별 누락 매뉴얼을 모두 수집한다. 정상 서비스에는 강제 적용하지 않는다."""
     collected = [c for c in state.get("collected", []) if c["source"] != "assessment"]
     assessments = assess_services(collected)
+    retrieval_events = []
+    if deps is not None and deps.runbook_retriever is not None:
+        # 완료된 scope가 있으면 동일한 검색을 반복하지 않는다.
+        previous = {c["data"]["system_name"]: c["data"] for c in state.get("collected", [])
+                    if c["source"] == "assessment" and c["data"].get("retrieval")}
+        monitoring = {c["data"]["system_name"]: c["data"] for c in collected if c["source"] == "monitoring"}
+        for assessment in assessments:
+            data = assessment["data"]
+            name = data["system_name"]
+            if name in previous:
+                data.update(previous[name])
+                continue
+            try:
+                retrieval = await asyncio.to_thread(deps.runbook_retriever.select,
+                                                     monitoring[name], data["incident_types"])
+            except Exception as exc:
+                retrieval = {"method": "rule_fallback", "incident_types": data["incident_types"],
+                             "hits": [], "error": type(exc).__name__}
+            data["retrieval"] = retrieval
+            data["incident_types"] = retrieval["incident_types"]
+            if data["incident_types"]:
+                data.update(status="matched", note="")
+            retrieval_events.append({"type": "RunbookRetrieved", "system_name": name, **retrieval})
     present = {(c.get("system_name"), c.get("incident_type")) for c in collected
                if c["source"] == "runbook"}
     missing = [(a["data"]["system_name"], incident_type)
@@ -251,7 +274,7 @@ async def replan_check_node(state: AgentState, deps: SupervisorDeps) -> dict:
     rounds = state.get("replan_rounds", 0)
     if not missing:
         verdict = {"type": "ReplanCheck", "round": rounds, "is_sufficient": True}
-        return {"collected": collected + assessments, "events": state["events"] + [verdict]}
+        return {"collected": collected + assessments, "events": state["events"] + retrieval_events + [verdict]}
     gap_tasks = [{"id": f"task-runbook-{rounds}-{i}", "agent": "research", "kind": "runbook",
                   "target": incident_type, "system_name": system_name, "status": "pending"}
                  for i, (system_name, incident_type) in enumerate(missing)]
@@ -259,7 +282,7 @@ async def replan_check_node(state: AgentState, deps: SupervisorDeps) -> dict:
                "targets": [{"system_name": s, "incident_type": t} for s, t in missing]}
     return {"tasks": state["tasks"] + gap_tasks, "collected": collected + assessments,
             "replan_rounds": rounds + 1,
-            "events": state["events"] + [verdict]}
+            "events": state["events"] + retrieval_events + [verdict]}
 
 
 @traceable(name="analysis_node")

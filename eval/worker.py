@@ -73,7 +73,11 @@ async def serve(args):
         fast = OllamaFastLLM(args.fast_model, 0)
         quality = OllamaQualityLLM(args.quality_model, 0)
     fixture = FixtureMCP(args.source_root)
-    graph = build_graph(SupervisorDeps(fast, quality, fixture, None, "v2"))
+    deps = SupervisorDeps(fast, quality, fixture, None, "v2")
+    if args.retrieval == "rag":
+        from agent.retrieval import build_retriever
+        deps.runbook_retriever = build_retriever(args.source_root, args.rag_db)
+    graph = build_graph(deps)
     print(json.dumps({"ready": True, "fast_model": fast.name, "quality_model": quality.name}), flush=True)
     for line in sys.stdin:
         request = json.loads(line)
@@ -90,6 +94,7 @@ async def serve(args):
                     "thread_id": f"eval-{case['id']}-{index}", "cost_usd": 0.0})
                 actual = {"route": result.get("route"), "reply": result["final"],
                           "report_mode": result.get("report_mode"), "events": result.get("events", []),
+                          "collected": result.get("collected", []),
                           "service_manuals": [{"system_name": c.get("system_name"),
                                                "incident_type": c.get("incident_type")}
                                               for c in result.get("collected", []) if c["source"] == "runbook"],
@@ -108,6 +113,8 @@ async def serve(args):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--source-root", type=Path, required=True)
+    parser.add_argument("--retrieval", choices=["rules", "rag"], default="rules")
+    parser.add_argument("--rag-db", type=Path)
     parser.add_argument("--backend", choices=["fake", "ollama"], required=True)
     parser.add_argument("--fast-model", default="qwen3:0.6b")
     parser.add_argument("--quality-model", default="qwen3:8b")

@@ -1,0 +1,402 @@
+{
+  "description": "FastAPI /chat 및 SSE와 실제 MCP stdio 연결. 생성/계획은 모의 모델, 검색 임베딩은 실제 Ollama. 세션은 메모리 DB 사용. 성능 벤치마크 아님.",
+  "health": {
+    "status": "ok",
+    "instance_id": 4495314320,
+    "creation_count": 1,
+    "supervisor_version": "v2",
+    "llm_backend": "fake",
+    "fast_llm": "fast-model-stub",
+    "quality_llm": "quality-model-stub",
+    "rag_enabled": true
+  },
+  "checks": [
+    {
+      "query": "billing-service 응답 지연 진단해줘",
+      "result": {
+        "reply": "진단할 서비스 확인이 필요합니다.\n등록된 모니터링 대상에서 billing-service를 찾을 수 없습니다. 서비스명을 확인해주세요.\n조회 가능한 대상: auth-service, cache-service, gateway-service, log-service, payments-service, web-01",
+        "events": [
+          {
+            "type": "RouteDecided",
+            "route": "incident"
+          },
+          {
+            "type": "TargetChecked",
+            "status": "unknown",
+            "targets": []
+          }
+        ],
+        "metadata": {
+          "route": "incident",
+          "task_count": 0,
+          "gate_removed": 0,
+          "replan_rounds": 0,
+          "retry_count": 0,
+          "parallel_elapsed": null,
+          "validation_attempts": 0,
+          "report_mode": null,
+          "cost_usd": 3e-06,
+          "llm_backend": "fake",
+          "supervisor_version": "v2",
+          "instance_id": 4495314320,
+          "langsmith_run_id": null
+        }
+      }
+    },
+    {
+      "query": "응답 지연 원인 진단해줘",
+      "result": {
+        "reply": "진단할 서비스 확인이 필요합니다.\n어느 서비스의 응답이 느리거나 장애가 발생했나요? 서비스명을 알려주세요.\n조회 가능한 대상: auth-service, cache-service, gateway-service, log-service, payments-service, web-01",
+        "events": [
+          {
+            "type": "RouteDecided",
+            "route": "incident"
+          },
+          {
+            "type": "TargetChecked",
+            "status": "missing",
+            "targets": []
+          }
+        ],
+        "metadata": {
+          "route": "incident",
+          "task_count": 0,
+          "gate_removed": 0,
+          "replan_rounds": 0,
+          "retry_count": 0,
+          "parallel_elapsed": null,
+          "validation_attempts": 0,
+          "report_mode": null,
+          "cost_usd": 2e-06,
+          "llm_backend": "fake",
+          "supervisor_version": "v2",
+          "instance_id": 4495314320,
+          "langsmith_run_id": null
+        }
+      }
+    },
+    {
+      "query": "payments-service랑 cache-service 둘 다 저하됐는데 공통 원인을 진단해줘",
+      "result": {
+        "reply": "1) 확인된 사실\n- payments-service: 상태=degraded, CPU 94.3%, 메모리 56.7%\n  조회 시각: 2026-10-22T09:30:34.380325\n  알림 원문: [\"CPU 91% (threshold 80%)\", \"payments-service-3 instance responding slow\"]\n- cache-service: 상태=degraded, CPU 41.9%, 메모리 88.9%\n  조회 시각: 2026-10-22T09:30:34.077787\n  알림 원문: [\"memory usage climbing steadily over 6h\", \"heap near limit\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- 대상 서비스: payments-service\n  - [Runbook: CPU 급증 대응 절차 / 1번] get_monitoring_status로 CPU 사용률과 최근 배포/트래픽 변화 시점을 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 2번] 반복 호출, 배치 작업 중복 실행 같은 특정 요청 패턴이 원인인지 최근 로그에서 확인한다.\n  - [Runbook: CPU 급증 대응 절차 / 3번] CPU가 90%를 넘고 지속되면 해당 인스턴스를 오토스케일링 그룹에서 한 대 더 띄워 부하를 분산한다.\n- 대상 서비스: cache-service\n  - [Runbook: 메모리 누수(Memory Leak) 대응 절차 / 1번] get_monitoring_status로 메모리 사용률 추세(시간에 따라 꾸준히 증가하는지)를 확인한다.\n  - [Runbook: 메모리 누수(Memory Leak) 대응 절차 / 2번] OOM 직전(90% 이상)이면 해당 프로세스를 즉시 재시작해 서비스 중단을 막는다 — 재시작은 임시 조치일 뿐임을 기록해둔다.\n  - [Runbook: 메모리 누수(Memory Leak) 대응 절차 / 3번] 힙 덤프 또는 프로파일링 도구로 어떤 객체가 계속 쌓이는지 확인한다.",
+        "events": [
+          {
+            "type": "RouteDecided",
+            "route": "incident"
+          },
+          {
+            "type": "TargetChecked",
+            "status": "valid",
+            "targets": [
+              "payments-service",
+              "cache-service"
+            ]
+          },
+          {
+            "type": "PlanCreated",
+            "task_count": 3,
+            "targets": [
+              "payments-service",
+              "cache-service"
+            ]
+          },
+          {
+            "type": "GateApplied",
+            "removed_analysis_tasks": 1
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-0",
+            "source": "monitoring",
+            "target": "payments-service",
+            "system_name": null,
+            "retries": 1
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "target-monitoring-1",
+            "source": "monitoring",
+            "target": "cache-service",
+            "system_name": null,
+            "retries": 0
+          },
+          {
+            "type": "RunbookRetrieved",
+            "system_name": "payments-service",
+            "model": "embeddinggemma:latest@85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "hits": [
+              {
+                "incident_type": "cpu-spike",
+                "uri": "runbook://incident-response/cpu-spike",
+                "sha256": "30796f7b5c1d0bc09acfb2518b240e3a07b04136e84fe41397802a3bf2bff22d",
+                "score": 0.51288
+              },
+              {
+                "incident_type": "high-latency",
+                "uri": "runbook://incident-response/high-latency",
+                "sha256": "0df4846e66993b0b9312327a3f51fe6de663d701c64c2c7c10a9e2c35e9e63a3",
+                "score": 0.462273
+              },
+              {
+                "incident_type": "memory-leak",
+                "uri": "runbook://incident-response/memory-leak",
+                "sha256": "085f00e9bba5effbb54e97a82d5f0b7032e027dac29816021729932a5e9a9ee1",
+                "score": 0.389431
+              }
+            ],
+            "index_version": "runbook-whole-document-v1",
+            "incident_types": [
+              "cpu-spike"
+            ],
+            "method": "rag_with_rule_coverage"
+          },
+          {
+            "type": "RunbookRetrieved",
+            "system_name": "cache-service",
+            "model": "embeddinggemma:latest@85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+            "hits": [
+              {
+                "incident_type": "memory-leak",
+                "uri": "runbook://incident-response/memory-leak",
+                "sha256": "085f00e9bba5effbb54e97a82d5f0b7032e027dac29816021729932a5e9a9ee1",
+                "score": 0.516378
+              },
+              {
+                "incident_type": "cpu-spike",
+                "uri": "runbook://incident-response/cpu-spike",
+                "sha256": "30796f7b5c1d0bc09acfb2518b240e3a07b04136e84fe41397802a3bf2bff22d",
+                "score": 0.449404
+              },
+              {
+                "incident_type": "disk-full",
+                "uri": "runbook://incident-response/disk-full",
+                "sha256": "72b9d4f006490887ccba981531129e5a42c0d7b8c789208db391fdc5acc566c7",
+                "score": 0.435759
+              }
+            ],
+            "index_version": "runbook-whole-document-v1",
+            "incident_types": [
+              "memory-leak"
+            ],
+            "method": "rag_with_rule_coverage"
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 0,
+            "is_sufficient": false,
+            "targets": [
+              {
+                "system_name": "payments-service",
+                "incident_type": "cpu-spike"
+              },
+              {
+                "system_name": "cache-service",
+                "incident_type": "memory-leak"
+              }
+            ]
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "task-runbook-0-0",
+            "source": "runbook",
+            "target": "cpu-spike",
+            "system_name": "payments-service",
+            "retries": 0
+          },
+          {
+            "type": "TaskCompleted",
+            "id": "task-runbook-0-1",
+            "source": "runbook",
+            "target": "memory-leak",
+            "system_name": "cache-service",
+            "retries": 0
+          },
+          {
+            "type": "ReplanCheck",
+            "round": 1,
+            "is_sufficient": true
+          },
+          {
+            "type": "AnalysisSkipped",
+            "reason": "analysis task 0개"
+          },
+          {
+            "type": "DraftWritten",
+            "attempt": 1,
+            "length": 1196
+          },
+          {
+            "type": "Validation",
+            "attempt": 1,
+            "verdict": "합격",
+            "fallback": false
+          },
+          {
+            "type": "Finalize",
+            "pipeline": "incident-v2"
+          }
+        ],
+        "metadata": {
+          "route": "incident",
+          "task_count": 4,
+          "gate_removed": 1,
+          "replan_rounds": 1,
+          "retry_count": 1,
+          "parallel_elapsed": 0.35,
+          "validation_attempts": 1,
+          "report_mode": "source_selected",
+          "cost_usd": 0.001604,
+          "llm_backend": "fake",
+          "supervisor_version": "v2",
+          "instance_id": 4495314320,
+          "langsmith_run_id": null
+        }
+      }
+    },
+    {
+      "query": "web-01 CPU 급증, auth-service 커넥션 풀도 같이 확인해줘",
+      "events": [
+        {
+          "type": "RouteDecided",
+          "route": "incident",
+          "node": "route"
+        },
+        {
+          "type": "TargetChecked",
+          "status": "valid",
+          "targets": [
+            "web-01",
+            "auth-service"
+          ],
+          "node": "check_target"
+        },
+        {
+          "type": "PlanCreated",
+          "task_count": 3,
+          "targets": [
+            "web-01",
+            "auth-service"
+          ],
+          "node": "plan"
+        },
+        {
+          "type": "GateApplied",
+          "removed_analysis_tasks": 1,
+          "node": "gate"
+        },
+        {
+          "type": "TaskCompleted",
+          "id": "target-monitoring-0",
+          "source": "monitoring",
+          "target": "web-01",
+          "system_name": null,
+          "retries": 0,
+          "node": "research"
+        },
+        {
+          "type": "TaskCompleted",
+          "id": "target-monitoring-1",
+          "source": "monitoring",
+          "target": "auth-service",
+          "system_name": null,
+          "retries": 0,
+          "node": "research"
+        },
+        {
+          "type": "RunbookRetrieved",
+          "system_name": "web-01",
+          "incident_types": [],
+          "method": "no_signal",
+          "hits": [],
+          "node": "replan_check"
+        },
+        {
+          "type": "RunbookRetrieved",
+          "system_name": "auth-service",
+          "model": "embeddinggemma:latest@85462619ee721b466c5927d109d4cb765861907d5417b9109caebc4e614679f1",
+          "hits": [
+            {
+              "incident_type": "high-latency",
+              "uri": "runbook://incident-response/high-latency",
+              "sha256": "0df4846e66993b0b9312327a3f51fe6de663d701c64c2c7c10a9e2c35e9e63a3",
+              "score": 0.62248
+            },
+            {
+              "incident_type": "network-timeout",
+              "uri": "runbook://incident-response/network-timeout",
+              "sha256": "ed68d1bc775138e7e66cfb50698949856bf27d5e11afefff6e5826223e063596",
+              "score": 0.404825
+            },
+            {
+              "incident_type": "memory-leak",
+              "uri": "runbook://incident-response/memory-leak",
+              "sha256": "085f00e9bba5effbb54e97a82d5f0b7032e027dac29816021729932a5e9a9ee1",
+              "score": 0.368114
+            }
+          ],
+          "index_version": "runbook-whole-document-v1",
+          "incident_types": [
+            "high-latency"
+          ],
+          "method": "rag_with_rule_coverage",
+          "node": "replan_check"
+        },
+        {
+          "type": "ReplanCheck",
+          "round": 0,
+          "is_sufficient": false,
+          "targets": [
+            {
+              "system_name": "auth-service",
+              "incident_type": "high-latency"
+            }
+          ],
+          "node": "replan_check"
+        },
+        {
+          "type": "TaskCompleted",
+          "id": "task-runbook-0-0",
+          "source": "runbook",
+          "target": "high-latency",
+          "system_name": "auth-service",
+          "retries": 0,
+          "node": "research"
+        },
+        {
+          "type": "ReplanCheck",
+          "round": 1,
+          "is_sufficient": true,
+          "node": "replan_check"
+        },
+        {
+          "type": "AnalysisSkipped",
+          "reason": "analysis task 0개",
+          "node": "analysis"
+        },
+        {
+          "type": "DraftWritten",
+          "attempt": 1,
+          "length": 900,
+          "node": "write"
+        },
+        {
+          "type": "Validation",
+          "attempt": 1,
+          "verdict": "합격",
+          "fallback": false,
+          "node": "validate"
+        },
+        {
+          "type": "Finalize",
+          "pipeline": "incident-v2",
+          "node": "finalize"
+        },
+        {
+          "type": "FinalAnswer",
+          "reply": "1) 확인된 사실\n- web-01: 상태=healthy, CPU 36.7%, 메모리 49.3%\n  조회 시각: 2026-10-22T09:30:35.269117\n  알림 원문: []\n  확인 범위: 현재 관측에서 분류 가능한 장애 징후가 없어 장애 대응 매뉴얼을 적용하지 않았습니다. 과거 급증이나 일시적 장애 여부는 시계열 확인이 필요합니다.\n- auth-service: 상태=degraded, CPU 84.7%, 메모리 64.4%\n  조회 시각: 2026-10-22T09:30:35.274925\n  알림 원문: [\"p95 latency 2.4s (threshold 1.0s)\", \"connection pool 92% used\"]\n\n2) 아직 확인하지 못한 내용\n- 관측값만으로 근본 원인을 확정할 수 없습니다. 시계열과 지속 여부는 검증하지 않았습니다.\n- 최근 로그·배포 이력·리전별 분포는 수집하지 않았습니다. 패턴 분석 결과만으로 이상이 없다고 판단하지 않습니다.\n\n3) 매뉴얼에 따른 점검·조치 권고\n- 아래 절차는 실행한 작업이 아닙니다. 조건 충족 여부를 추가 확인한 뒤 적용을 검토하세요. 매뉴얼의 임계값은 관측값과 구분해야 합니다.\n- 대상 서비스: auth-service\n  - [Runbook: 응답 지연(High Latency) 대응 절차 / 1번] get_monitoring_status로 p95 지연시간과 커넥션 풀 사용률을 확인한다.\n  - [Runbook: 응답 지연(High Latency) 대응 절차 / 2번] 커넥션 풀 사용률이 90%를 넘으면 풀 크기를 늘리거나 느린 쿼리/외부 호출에 타임아웃을 건다.\n  - [Runbook: 응답 지연(High Latency) 대응 절차 / 3번] 지연이 특정 리전/인스턴스에 몰려 있으면 해당 인스턴스를 로드밸런서에서 일시 제외한다.",
+          "prompt": null
+        }
+      ]
+    }
+  ]
+}
