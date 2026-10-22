@@ -90,6 +90,9 @@ LLM이 관련 매뉴얼 항목 ID를 선택하고, 코드는 실제 관측값과
 
 ## 3. 아키텍처와 적용 기술
 
+<details>
+<summary>아키텍처 흐름도 보기</summary>
+
 ```mermaid
 flowchart TD
     U[사용자 질문 / 웹 채팅] --> S[FastAPI + LangGraph Supervisor]
@@ -110,6 +113,8 @@ flowchart TD
     F --> J[사용자가 평가 버튼 선택]
     J --> L[LLM-as-a-Judge: 점수 / 이유 / 인용문]
 ```
+
+</details>
 
 | 기술 요소 | 적용 내용 및 범위 |
 |---|---|
